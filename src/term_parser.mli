@@ -36,9 +36,9 @@ val defn_transform : Types.prodname -> parser_transform
 
 exception Parse_error of Types.loc * string
 val ident_string : string
-val parse_lu_lowerbound : (char, Types.suffixnum) Types.parser
+val parse_lu_lowerbound : (char, Types.suffixnum) Types.pparser
 val parse_lu_upperbound :
-  string list -> (char, Types.suffix_item) Types.parser
+  string list -> (char, Types.suffix_item) Types.pparser
 val one_parse :
   (('a list -> 'b -> unit) -> char list -> 'c) ->
   string -> 'b Types.optionprime

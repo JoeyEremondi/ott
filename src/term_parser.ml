@@ -177,7 +177,7 @@ end
 
 open Hash_table
 
-let memo : ('t, 'v) parser -> ('t, 'v) parser =
+let memo : ('t, 'v) pparser -> ('t, 'v) pparser =
   fun cps_fn ->
   let table = make_table () in
   fun k ts ->
@@ -196,9 +196,9 @@ let memo : ('t, 'v) parser -> ('t, 'v) parser =
         List.iter (function (results1, results2) -> k results1 results2)
                   entry.results
 
-let parse_fail : ('t, 'v) parser = fun k ts -> ()
+let parse_fail : ('t, 'v) pparser = fun k ts -> ()
 
-let parse_single : ('t-> 'v list) -> ('t,'v) parser
+let parse_single : ('t-> 'v list) -> ('t, 'v) pparser
     = fun f ->
       (*memo*) (
       fun k ts -> match ts with
@@ -206,7 +206,7 @@ let parse_single : ('t-> 'v list) -> ('t,'v) parser
       | t'::ts' -> ok ts'; (List.iter (fun v -> k ts' v) (f t'))
       )
 
-let parse_satisfy : ('t->bool) -> ('t,'t) parser
+let parse_satisfy : ('t->bool) -> ('t,'t) pparser
     = fun f ->
       (*memo*) (
       fun k ts -> match ts with
@@ -216,7 +216,7 @@ let parse_satisfy : ('t->bool) -> ('t,'t) parser
 
 (* succeeds if either we've reached the end or the next token (which is *)
 (* not consumed) satisfies f *)
-let parse_satisfy_lookahead : ('t->bool) -> ('t,unit) parser
+let parse_satisfy_lookahead : ('t->bool) -> ('t,unit) pparser
     = fun f ->
       (*memo*) (
       fun k ts -> match ts with
@@ -224,10 +224,10 @@ let parse_satisfy_lookahead : ('t->bool) -> ('t,unit) parser
       | t'::ts' -> if f t' then k ts () else parse_fail k ts
       )
 
-let parse_literal : 't -> ('t,'t) parser
+let parse_literal : 't -> ('t,'t) pparser
     = fun t -> parse_satisfy ( (=) t)
 
-let parse_satisfy' : ('t->bool) -> ('t,unit) parser
+let parse_satisfy' : ('t->bool) -> ('t,unit) pparser
     = fun f ->
       (*memo*) (
       fun k ts -> match ts with
@@ -235,7 +235,7 @@ let parse_satisfy' : ('t->bool) -> ('t,unit) parser
       | t'::ts' -> if f t' then (ok ts'; k ts' ()) else parse_fail k ts'
       )
 
-let parse_satisfy_opt' : ('t->'a option) -> ('t,'a) parser
+let parse_satisfy_opt' : ('t->'a option) -> ('t,'a) pparser
     = fun f ->
       (*memo*) (
       fun k ts -> match ts with
@@ -245,57 +245,57 @@ let parse_satisfy_opt' : ('t->'a option) -> ('t,'a) parser
         | None -> parse_fail k ts)
       )
 
-let parse_nothing : ('t,unit) parser
+let parse_nothing : ('t,unit) pparser
     = fun k ts -> k ts ()
 
-let parse_choice : ('a,'b) parser list -> ('a,'b) parser
+let parse_choice : ('a,'b) pparser list -> ('a,'b) pparser
     = fun ps ->
       (*memo*) (
       fun k ts ->
       List.iter (fun p -> p k ts) ps
       )
 
-let parse_list_help :('a,'b) parser -> ('a,'b list) parser -> ('a,'b list) parser
+let parse_list_help :('a,'b) pparser -> ('a,'b list) pparser -> ('a,'b list) pparser
     = fun p1 p2 ->
       (*memo*) (
       fun k ts ->
       p1 (fun ts' res -> p2 (fun ts'' res' -> k ts'' (res::res')) ts') ts
       )
 
-let rec parse_list : ('a,'b) parser list -> ('a,'b list) parser
+let rec parse_list : ('a,'b) pparser list -> ('a,'b list) pparser
     = fun ps ->
       match ps with
         [] -> (*memo*) ( fun k ts -> k ts [] )
       | p1::ps -> parse_list_help p1 (parse_list ps)
 
-let parse_pair :('a,'b1) parser -> ('a,'b2) parser -> ('a,'b1*'b2) parser
+let parse_pair :('a,'b1) pparser -> ('a,'b2) pparser -> ('a,'b1*'b2) pparser
     = fun p1 p2 ->
       (*memo*) (
       fun k ts ->
       p1 (fun ts' res -> p2 (fun ts'' res' -> k ts'' (res, res')) ts') ts
       )
 
-let parse_map : ('b->'c) -> ('a,'b) parser -> ('a,'c) parser
+let parse_map : ('b->'c) -> ('a,'b) pparser -> ('a,'c) pparser
     = fun f p ->
       (*memo*) (
       fun k ts ->
         p (fun ts' res -> k ts' (f res)) ts
       )
 
-let parse_option_map : ('b->'c option) -> ('a,'b) parser -> ('a,'c) parser
+let parse_option_map : ('b->'c option) -> ('a,'b) pparser -> ('a,'c) pparser
     = fun f p ->
       (*memo*) (
       fun k ts ->
         p (fun ts' res -> match f res with None -> () | Some w -> k ts' w) ts
       )
 
-let parse_lift_singleton : ('a,'b) parser -> ('a,'b list) parser =
+let parse_lift_singleton : ('a,'b) pparser -> ('a,'b list) pparser =
     fun p -> parse_map (fun v->[v]) p
 
-let parse_lift_empty : ('a,'b) parser -> ('a,'c list) parser =
+let parse_lift_empty : ('a,'b) pparser -> ('a,'c list) pparser =
     fun p -> parse_map (fun v->[]) p
 
-let parse_optional_prefix_single : ('t->bool)->('t,'a) parser -> ('t,'a) parser
+let parse_optional_prefix_single : ('t->bool)->('t,'a) pparser -> ('t,'a) pparser
     = fun f p ->
       (*memo*) (
       fun k ts -> match ts with
@@ -303,7 +303,7 @@ let parse_optional_prefix_single : ('t->bool)->('t,'a) parser -> ('t,'a) parser
       | t'::ts' -> if f t' then (ok ts'; p k ts') else p k ts
       )
         
-let rec parse_star : ('a,'b) parser -> ('a,'b list) parser  
+let rec parse_star : ('a,'b) pparser -> ('a,'b list) pparser  
     = fun p ->
       memo (
       fun k ts ->
@@ -311,7 +311,7 @@ let rec parse_star : ('a,'b) parser -> ('a,'b list) parser
         (parse_list_help p (parse_star p)) k ts 
       )
 
-let parse_plus  : ('a,'b) parser -> ('a,'b list) parser  
+let parse_plus  : ('a,'b) pparser -> ('a,'b list) pparser  
     = fun p -> 
       parse_map (function (x,xs)->x::xs) (parse_pair p (parse_star p))
 
@@ -320,7 +320,7 @@ let parse_plus  : ('a,'b) parser -> ('a,'b list) parser
 (* auxilary little parsers                          *)
 (* ************************************************ *)
 
-let parse_string : string -> (char,string) parser
+let parse_string : string -> (char,string) pparser
     = fun s ->
       parse_map
         (Auxl.string_of_char_list)
@@ -329,7 +329,7 @@ let parse_string : string -> (char,string) parser
               (function (c:char) -> parse_literal c)
               (Auxl.char_list_of_string s)))
 
-let parse_strings : string list -> (char,string) parser
+let parse_strings : string list -> (char,string) pparser
     = fun ss ->
       parse_choice
         (List.map parse_string ss)
@@ -589,16 +589,16 @@ imperatively.*)
 
   (* parsing elements *)
   
-  let rec parse_element : bool -> nontermroot option -> element -> (char,symterm_element list) parser  
+  let rec parse_element : bool -> nontermroot option -> element -> (char,symterm_element list) pparser  
       = fun concrete parse_element_context e -> 
         match e with
         | Lang_nonterm (ntrp,nt) ->    
-            let p' : (char,symterm) parser = 
+            let p' : (char,symterm) pparser = 
                 if concrete then 
                   (fun i ts -> (lookup (Auxl.fake_concrete_ntr_of_ntr ntrp) i ts)) 
                 else 
                   (fun i ts -> (lookup ntrp) i ts) in
-            let p'' :(char,symterm_element list) parser = 
+            let p'' :(char,symterm_element list) pparser = 
                 parse_map (fun st -> [ Ste_st(dummy_loc,st) ]) p' in
             p''
         | Lang_metavar (mvrp,mv) ->  
@@ -666,14 +666,14 @@ imperatively.*)
             let p_es :(char,symterm_element list)parser    
                 = parse_map (List.concat) p_es0 in
                 
-            let p_tmopt : (char, unit) parser = match elb.elb_tmo with
+            let p_tmopt : (char, unit) pparser = match elb.elb_tmo with
             | None -> parse_nothing 
             | Some tm' -> 
                 parse_pre_whitespace
                   (parse_map (function _ -> ())
                      (parse_string_nonalphanum_after tm')) in
                 
-            let p_dots : (char,int) parser = 
+            let p_dots : (char,int) pparser = 
                 parse_pre_whitespace
 (*                  (parse_dots_without_length_constraint) in  *)
                    (parse_dots_with_length_constraint length_constraint) in  
@@ -682,7 +682,7 @@ imperatively.*)
             let loc = dummy_loc in 
 
             (* a Bound_dotform form eg e1:t1,..,en:tn *)
-            let p_dotform0 :(char,symterm_element list * (unit * (int * (unit * symterm_element list)))) parser 
+            let p_dotform0 :(char,symterm_element list * (unit * (int * (unit * symterm_element list)))) pparser 
                 = parse_pair 
                   p_es 
                   (parse_pair 
@@ -690,7 +690,7 @@ imperatively.*)
                      (parse_pair 
                         p_dots 
                         (parse_pair p_tmopt p_es))) in
-            let p_dotform :(char,symterm_list_item) parser 
+            let p_dotform :(char,symterm_list_item) pparser 
                 = parse_option_map (function
                     (es1,((),(n',((),es2)))) -> 
                       try
@@ -733,7 +733,7 @@ imperatively.*)
                          (parse_pair
                             parse_indexvar
                             (parse_listform_token Grammar_pp.pp_COMP_RIGHT))))) in
-            let p_comp :(char,symterm_list_item) parser 
+            let p_comp :(char,symterm_list_item) pparser 
                 = parse_option_map (function
                     ((),(es,((),(ivr,())))) -> 
                       let es'' = 
@@ -761,7 +761,7 @@ imperatively.*)
                                (parse_pair
                                   parse_indexvar
                                   (parse_listform_token Grammar_pp.pp_COMP_RIGHT))))))) in
-            let p_comp_u :(char,symterm_list_item) parser 
+            let p_comp_u :(char,symterm_list_item) pparser 
                 = parse_option_map (function
                     ((),(es,((),(ivr,((),(ivr',())))))) -> 
                       let es'' = 
@@ -793,7 +793,7 @@ imperatively.*)
                                      (parse_pair
                                         (parse_pre_whitespace (parse_lu_upperbound all_indexvar_synonyms))
                                         (parse_listform_token Grammar_pp.pp_COMP_RIGHT))))))))) in
-            let p_comp_lu :(char,symterm_list_item) parser
+            let p_comp_lu :(char,symterm_list_item) pparser
                 = parse_option_map (function
                     ((),(es,((),(ivr,((),(lower,(dotlength,(si',())))))))) ->
                       let es'' =
@@ -809,15 +809,15 @@ imperatively.*)
                   p_comp_lu0 in
 
             (* exactly one list form, either Bound_dotform, Bound_comp, etc *)
-            let p_listform :(char, symterm_list_item) parser
+            let p_listform :(char, symterm_list_item) pparser
                 = (parse_choice [p_dotform;p_comp;p_comp_u;p_comp_lu]) in
-            let p_listform' :(char, symterm_element list) parser
+            let p_listform' :(char, symterm_element list) pparser
                 = parse_map
                   (function stli -> [Ste_list(loc,[stli])]) 
                   p_listform in
 
             (* a concrete list entry, eg e:t  *)
-            let p_concrete_entry :(char,symterm_list_item) parser
+            let p_concrete_entry :(char,symterm_list_item) pparser
                 = parse_map
                   (function es -> Stli_single (loc,es))
                   p_es in
@@ -906,7 +906,7 @@ imperatively.*)
                 | [Lang_nonterm(ntr',nt')] -> ntr=ntr'
                 | _ -> false) in
 
-            let p_all :(char,symterm_element list) parser
+            let p_all :(char,symterm_element list) pparser
                 = match concrete,self_loop with
                 | false,false -> p_multiple
                 | false,true -> p_multiple_for_self_loop
@@ -922,7 +922,7 @@ imperatively.*)
 
   (* parsing a single production *)
 
-  let make_production_parser : bool -> nontermroot -> prod -> (char,symterm) parser
+  let make_production_parser : bool -> nontermroot -> prod -> (char,symterm) pparser
       = fun concrete ntr p -> 
         Auxl.debug ("parse_production ["^ntr^"] "^p.prod_name^"\n");
 
@@ -937,7 +937,7 @@ imperatively.*)
                  p.prod_es) in
         let p'' :(char,symterm_element list)parser    
             = parse_map (List.concat) p' in
-        let p''' :(char,symterm) parser               
+        let p''' :(char,symterm) pparser               
             = parse_map 
               (fun stes -> 
                 St_node ( dummy_loc, 
@@ -946,7 +946,7 @@ imperatively.*)
                             st_es = stes;
                             st_loc = dummy_loc}) )
               p'' in
-(*         let p_annot : (char,unit) parser  *)
+(*         let p_annot : (char,unit) pparser  *)
 (*             = parse_choice *)
 (*               [ parse_single (function  *)
 (*                   | Tok_terminal(l,t)  *)
@@ -971,7 +971,7 @@ imperatively.*)
   
   (* parsers for the symbolic nonterms associated with a rule *)
 
-  let parsers_for_symbolic_nonterm : nontermroot -> (char,symterm) parser list
+  let parsers_for_symbolic_nonterm : nontermroot -> (char,symterm) pparser list
         = function ntrp ->
           Auxl.debug ("foo: "^ntrp^"\n");
           [(parse_map (function  ntr,suff -> St_nonterm(dummy_loc,ntrp,(ntr,suff)))
@@ -982,7 +982,7 @@ imperatively.*)
 
   (* parsers for the symbolic nonterms for proper subrules of a rule *)
 
-  let parsers_for_symbolic_nonterm_sub : nontermroot -> (char,symterm) parser list
+  let parsers_for_symbolic_nonterm_sub : nontermroot -> (char,symterm) pparser list
         = function ntrp->
           List.map
             (function ntrpl ->
@@ -994,7 +994,7 @@ imperatively.*)
 
   (* build a parser from a rule, paired with its rule name  *)
   
-  let make_rule_parser : bool -> rule -> (nontermroot * (char,symterm) parser)
+  let make_rule_parser : bool -> rule -> (nontermroot * (char,symterm) pparser)
       = fun concrete r -> 
         (* allow either a proper subterm *)
         let ps1=(List.map(make_production_parser concrete r.rule_ntr_name) 
@@ -1035,7 +1035,7 @@ imperatively.*)
 
   (* build all the parsers for a syntaxdefn *)
   
-  let make_syntaxdefn_parsers : syntaxdefn -> (nontermroot * (char,symterm) parser) list 
+  let make_syntaxdefn_parsers : syntaxdefn -> (nontermroot * (char,symterm) pparser) list 
       = fun xd -> 
         List.map (make_rule_parser false) xd.xd_rs 
         @ List.map (make_rule_parser true) (List.filter (fun r -> not r.rule_meta) xd.xd_rs) in
@@ -1109,7 +1109,7 @@ let strip_trailing_whitespace s =
 
 (* parse a token list to give all the possible parses *)
 (*
-let parse : ( nontermroot -> (char,symterm) parser ) -> nontermroot -> char list -> (symterm * char list) list
+let parse : ( nontermroot -> (char,symterm) pparser ) -> nontermroot -> char list -> (symterm * char list) list
     = fun lookup ntr cs ->
       reset_furthest_pos cs;
       let results = ref [] in

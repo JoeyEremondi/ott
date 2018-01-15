@@ -469,7 +469,7 @@ and symterm_list_body (* symterm_list *) =  (* stlb *)
 (* of them, indexed by the nontermroot's naming their rules. *)
 (* some of this structure could be hidden in term_parser.ml *)
 
-type ('t,'v) parser = ('t list -> 'v -> unit) -> 't list -> unit
+type ('t,'v) pparser = ('t list -> 'v -> unit) -> 't list -> unit
 
 type made_parser = nontermroot -> bool -> string -> symterm list
 

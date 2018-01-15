@@ -36,7 +36,7 @@ topdir = ..
 OTTVER=0.27
 
 # for us
-OCAMLC	 	= ocamlc -g -dtypes  # -w p disables partial match warnings
+OCAMLC	 	= ocamlfind ocamlc -package js_of_ocaml -package js_of_ocaml.syntax -syntax camlp4o -linkpkg -g -dtypes  # -w p disables partial match warnings
 OCAMLOPT	= ocamlopt -w y -g -dtypes -unsafe -inline 9
 
 # for releases
