@@ -602,6 +602,7 @@ let rec pp_subst_symterm
 	      ^ that_s ^ " "
 	      ^ ( match Grammar_pp.pp_mse m xd sie de false "" (Some subst.sb_that) bound_things_glommed with x,_,_ -> x)
 	  | Twf _ -> "<<< mem FZ no idea >>>"
+          | Rdx _ -> "(error \"TODO list_mem \")"
           | Tex _ | Ascii _ | Lex _ | Menhir _ -> Auxl.errorm m "pp_subst_symterm"
 	in
 
@@ -1086,7 +1087,7 @@ let pp_subst_prod
     let lhs_pat = Grammar_pp.pp_symterm m xd sie de lhs_st in
     let lhs = 
       ( match m with 
-      | Coq _ | Caml _ | Lem _ -> lhs_pat  
+      | Coq _ | Caml _ | Lem _ | Rdx _ -> lhs_pat  
       | Isa _ | Hol _ | Twf _ -> 
 (*           Auxl.subst_name subst.sb_name rule_ntr_name  ^ " " *)
           ( if subst.sb_multiple then sub_var
@@ -1112,7 +1113,7 @@ let pp_subst_prod
 
     let substituted_singleton_rhs thing_s =
       ( match m with
-      | Coq _ | Isa _ | Hol _ | Lem _ | Caml _ ->
+      | Coq _ | Isa _ | Hol _ | Lem _ | Caml _ | Rdx _ ->
 	  let ssr = 
 	    if subst.sb_multiple then 
               (match m with
@@ -1151,7 +1152,8 @@ let pp_subst_prod
                  )
               | Coq coq_opt -> 
 		  pp_list_assoc m;
-		  "(match list_assoc " (* A B eq *)
+    "(match list_assoc " (* A B eq *)
+              | Rdx _ -> "(error \"TODO list_assoc\")"
 (*   ^ "(A:=" ^ Grammar_pp.pp_nt_or_mv_root m xd (root_of that_var) ^ ") " *)
 (*   ^ "(B:=" ^ (root_of this_var) ^ ") " *)
 		  ^ "eq_" ^ (Grammar_pp.pp_nt_or_mv_root_ty m xd subst.sb_that (*(root_of that_var)*)) 
@@ -1177,7 +1179,8 @@ let pp_subst_prod
 	      let eq_s = 
 		( match m with
 		| Isa _ | Hol _ | Lem _ | Caml _ -> thing_s ^ "=" ^ that_s
-		| Twf _ -> raise Auxl.ThisCannotHappen
+  | Twf _ -> raise Auxl.ThisCannotHappen
+  | Rdx _ -> "(equal?" ^ thing_s ^ " " ^ that_s ^ ")"
 		| Coq _ ->
 		    ( if Auxl.require_locally_nameless xd 
 		    then "eq_var"
@@ -1389,7 +1392,8 @@ let pp_subst_rule : subst -> pp_mode -> syntaxdefn -> nontermroot list -> rule -
              " {struct " ^ Grammar_pp.pp_nonterm m xd in_var ^"}", 
              " : " ^ Grammar_pp.pp_nontermroot_ty m xd r.rule_ntr_name ^ " :=\n" 
 	     ^ "  match " ^ Grammar_pp.pp_nonterm m xd in_var ^ " with\n" ) )
-      | Lem _ 
+      | Lem _
+      | Rdx _ -> ("(error \"TODO substs rule pp 1\")", "(error \"TODO substs rule pp 2\")", "(error \"TODO substs rule pp 3\")")
       | Caml _ ->       
           
 	   (lemTODOm m "22" id

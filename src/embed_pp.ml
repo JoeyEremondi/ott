@@ -73,7 +73,7 @@ and pp_embedmorphism fd m xd lookup (l,hn,es) =
   | (Isa io, "isa-lib") -> 
       let x = io.isa_library in
       x := (fst !x, embed_strings (snd !x) es)
-  | (Coq _, _) | (Isa _, _) | (Hol _,_) | (Lem _,_) | (Twf _,_) | (Tex _,_) | (Caml _,_) | (Lex _, _) | (Menhir _, _) -> ()
+  | (Coq _, _) | (Isa _, _) | (Hol _,_) | (Lem _,_) | (Twf _,_) | (Tex _,_) | (Caml _,_) | (Lex _, _) | (Menhir _, _) | (Rdx _, _) -> ()
 
 and pp_embed_spec fd m xd lookup es = 
   List.iter (pp_embed_spec_el fd m xd lookup) es

@@ -830,6 +830,7 @@ let big_line_comment m s =
   | Coq _ | Hol _ | Lem _ | Isa _ | Caml _ -> "(** "^s^" *)\n"
   | Twf _ -> "%%% "^s^" %%%\n\n"
   | Tex _ -> "% "^s^"\n"
+  | Rdx _ -> ";;;; "^s^" \n"
   | Menhir _ | Lex _ | Ascii _ -> errorm m "big_line_comment"
 
 (* print only if not empty *)
@@ -1614,7 +1615,8 @@ let pp_true m in_prop =
       else "true"
   | Hol _ -> "T" 
   | Caml _ -> "true" 
-  | Lem _ -> "true" 
+  | Lem _ -> "true"
+  | Rdx _ -> "#t"
   | Ascii _ | Tex _ | Twf _ | Lex _ | Menhir _ -> errorm m "pp_true"
 
 let pp_false m in_prop =
@@ -1627,13 +1629,15 @@ let pp_false m in_prop =
   | Hol _ -> "F" 
   | Caml _ -> "false"
   | Lem _ -> "false"
+  | Rdx _ -> "#f"
   | Ascii _ | Tex _ | Twf _ | Lex _ | Menhir _ -> errorm m "pp_false"
 
 let pp_and m in_prop =
   match m with
   | Isa _ -> " & " 
   | Caml _ -> " && " 
-  | Lem _ -> " && " 
+  | Lem _ -> " && "
+  | Rdx _ -> "and "
   | Coq co ->
       if co.coq_expand_lists || in_prop
       then " /\\ "     
@@ -1651,6 +1655,7 @@ let pp_or m in_prop =
   | Hol _ -> " \\/ " 
   | Caml _ -> " || "
   | Lem _ -> " || "
+  | Rdx _ -> " or "
   | Ascii _ | Tex _ | Twf _ | Lex _ | Menhir _ -> errorm m "pp_or"
 
 (* coq/twelf support *)
@@ -1694,7 +1699,7 @@ let insert_append m l =
 	  ^ ( String.concat " <- " 
 	      (List.map2 (fun s nl -> s ^ " " ^ nl) l list_nl) )
 	  ^ final_append )
-  | Caml _ | Tex _ | Ascii _ | Hol _ | Lem _ | Isa _ | Lex _ | Menhir _ -> raise ThisCannotHappen
+  | Caml _ | Tex _ | Ascii _ | Hol _ | Lem _ | Isa _ | Lex _ | Menhir _ | Rdx _ -> raise ThisCannotHappen
 
 (* skip a nonterm or a metavar in a list of elements *)
 let rec skip_nt_mv (es:element list) =

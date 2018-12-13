@@ -87,6 +87,7 @@ let pp_source_location m l =
   | Ascii _ 
   | Tex _ -> Printf.sprintf "%% %s\n" s
   | Coq _ | Isa _ | Hol _ | Lem _ | Twf _ | Caml _  ->  Printf.sprintf "(* %s *)\n" s
+  | Rdx _  ->  Printf.sprintf ";; %s \n" s
   | Lex _ | Menhir _ -> ""  
 
 
@@ -1167,7 +1168,8 @@ and pp_nt_or_mv_with_de_with_sie_internal as_type m xd sie (de :dotenv) ((ntmvr,
 		^ " = Some " ^ hyp_var ^ " ->\n";
 	      ( if (String.compare de1i.de1_pattern proj_arg = 0)
 	      then hyp_var 
-	      else "(match " ^ hyp_var ^ " with " ^ de1i.de1_pattern ^ " => " ^ proj_arg ^" end)" )
+       else "(match " ^ hyp_var ^ " with " ^ de1i.de1_pattern ^ " => " ^ proj_arg ^" end)" )
+          | Rdx _ -> "(error \"TODO Pp symterm \")"
           | Ascii _ | Tex _ -> raise ThisCannotHappen
           | Twf _ -> raise TwelfNotImplemented
           | Caml _ | Lex _ | Menhir _ -> Auxl.errorm m "pp_symterm for proper symterms not supported"

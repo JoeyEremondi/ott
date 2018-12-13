@@ -79,7 +79,7 @@ let pp_subntr (m: pp_mode) (xd: syntaxdefn): (nontermroot * nontermroot * nonter
 	Auxl.pp_is ntrl ntru ^ " " 
 	^ Auxl.hide_isa_trailing_underscore m
 	    (( match m with Twf _ -> String.uppercase ntr' 
-	    | Coq _ | Isa _ | Hol _ | Lem _ -> ntr'
+	    | Coq _ | Isa _ | Hol _ | Lem _ | Rdx _ -> ntr'
 	    | Caml _ | Tex _ | Ascii _ | Lex _ | Menhir _ -> raise Auxl.ThisCannotHappen )
 	     ^ Grammar_pp.pp_suffix_with_sie m xd Bounds.sie_project suff)
       in ( match m with

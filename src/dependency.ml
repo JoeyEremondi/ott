@@ -576,6 +576,7 @@ let collapse m xd (funcs:int_funcs) : int_funcs_collapsed =
   | Coq _ -> coq_collapse m xd funcs
   | Twf _ -> twf_collapse m xd funcs
   | Caml _ -> caml_collapse m xd funcs
+  | Rdx _ -> []
   | Tex _ | Ascii _ -> Auxl.error None "internal: collapse of Tex-Ascii\n"
 
 (* *** the printer *)
@@ -583,6 +584,7 @@ let collapse m xd (funcs:int_funcs) : int_funcs_collapsed =
 let print m xd (sorting,refl) =
   match m with
   | Tex _ | Ascii _ -> Auxl.error None "internal: print of Tex-Ascii\n"
+  | Rdx _ -> "(error \"TODO print dependency\")"
   | Isa io ->
       let print_lemma block = 
 	if ( List.exists 

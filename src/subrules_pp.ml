@@ -424,7 +424,7 @@ let pp_subrules m xd srs : int_funcs_collapsed =
 		   dep := deps @ !dep;
 		   funcs := !funcs @ new_funcs;
                    match m with 
-                   | Coq _ | Hol _ | Lem _| Isa _ | Caml _ -> 
+                   | Coq _ | Hol _ | Lem _| Isa _ | Caml _ | Rdx _ -> (* TODO Rdx here?*) 
 		       if conjuncts = [] 
                        then Auxl.pp_true m false
 		       else String.concat (Auxl.pp_and m false) conjuncts
@@ -434,7 +434,7 @@ let pp_subrules m xd srs : int_funcs_collapsed =
                  pls in
 
              match m with 
-             | Coq _ | Hol _ | Lem _ | Isa _ | Caml _ -> 
+             | Coq _ | Hol _ | Lem _ | Isa _ | Caml _ | Rdx _ -> (*TODO redex here? *) 
                  let rhs = 
                    if rhss = [] 
                    then Auxl.pp_false m false
@@ -487,7 +487,8 @@ let pp_subrules m xd srs : int_funcs_collapsed =
         | Twf _ -> 
 	    ( Auxl.pp_is srl sru ^ " : " 
 	      ^ Grammar_pp.pp_nontermroot_ty m xd sru
-	      ^ " -> type.\n", "","")
+       ^ " -> type.\n", "","")
+        | Rdx _ -> ("(error \"TODO Redex subrule header 1 \")", "(error \"TODO Redex subrule header 2 \")", "(error \"TODO Redex subrule header 3 \")")
         | Tex _ | Ascii _ | Lex _ | Menhir _ -> Auxl.error (Some (Auxl.loc_of_ntr xd srl)) "pp_subprod"
          ) in
 
