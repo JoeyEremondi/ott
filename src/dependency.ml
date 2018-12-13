@@ -531,6 +531,16 @@ let coq_collapse m xd funcs =
     (f.r_fun_id, f.r_fun_dep, (f.r_fun_header, (collapse_clauses m f.r_fun_id f.r_fun_clauses), Footer_empty)) in
   List.map (collapse_func m) funcs.i_funcs
 
+let rdx_collapse m xd funcs = 
+  let collapse_clause hd1 m id (_,lhs, rhs) =
+    "\n[" ^ rhs ^ "\n------------------\n (" ^ hd1 ^ " " ^ lhs ^ ")\n]\n" in
+  let collapse_clauses hd1 m id clauses =
+    String.concat "" (List.map (collapse_clause hd1 m id) clauses) in
+  let collapse_func m f =
+    let hd1 = f.r_fun_id in
+    (f.r_fun_id, f.r_fun_dep, (f.r_fun_header, (collapse_clauses hd1 m f.r_fun_id f.r_fun_clauses), Footer_empty)) in
+  List.map (collapse_func m) funcs.i_funcs
+
 let twf_collapse m xd funcs = 
   let collapse_clause m id (pfx, lhs, rhs) =
     "" ^ id ^ "/" ^ pfx ^ " : " ^ id ^ " " ^ lhs ^ " " ^ rhs ^ ".\n" in
@@ -576,7 +586,7 @@ let collapse m xd (funcs:int_funcs) : int_funcs_collapsed =
   | Coq _ -> coq_collapse m xd funcs
   | Twf _ -> twf_collapse m xd funcs
   | Caml _ -> caml_collapse m xd funcs
-  | Rdx _ -> []
+  | Rdx _ -> rdx_collapse m xd funcs
   | Tex _ | Ascii _ -> Auxl.error None "internal: collapse of Tex-Ascii\n"
 
 (* *** the printer *)
@@ -584,7 +594,18 @@ let collapse m xd (funcs:int_funcs) : int_funcs_collapsed =
 let print m xd (sorting,refl) =
   match m with
   | Tex _ | Ascii _ -> Auxl.error None "internal: print of Tex-Ascii\n"
-  | Rdx _ -> "(error \"TODO print dependency\")"
+  | Rdx _ ->
+    let print_block block =
+	if ((List.length block) = 1) 
+	then 
+	  let (nt,((h1,h2,h3),s,_)) = List.hd block in
+	  "(define-judgment-form L " ^ h1 ^ h2 ^ h3 ^ s ^ ")\n\n" 
+	else
+	  "(define-judgment-form L "
+	  ^ (String.concat ")\n(define-judgment-form L " 
+               (List.map (fun (_,((h1,h2,h3),s,_)) -> h1 ^ h2 ^ h3 ^ s) block))
+	  ^ ")" in
+      "; DEPENDENCIES" ^ string_of_int (List.length sorting) ^ "\n"^ String.concat "" (List.map print_block sorting)
   | Isa io ->
       let print_lemma block = 
 	if ( List.exists 
@@ -719,4 +740,19 @@ let print m xd (sorting,refl) =
 
 let compute m xd (funcs:int_funcs_collapsed) =
   print m xd (sort funcs)
+
+let compute_rdx_subrules m xd (funcs:int_funcs_collapsed) =
+  let print_rdx_subrules (sorting, refl) =
+    let print_block block =
+	if ((List.length block) = 1) 
+	then 
+	  let (nt,((h1,h2,h3),s,_)) = List.hd block in
+	  "(define-judgment-form L " ^ h1 ^ h2 ^ h3 ^ s ^ ")\n\n" 
+	else
+	  "(define-judgment-form L "
+	  ^ (String.concat ")\n(define-judgment-form L " 
+               (List.map (fun (_,((h1,h2,h3),s,_)) -> h1 ^ h2 ^ h3 ^ s) block))
+	  ^ ")" in
+      "; DEPENDENCIES" ^ string_of_int (List.length sorting) ^ "\n"^ String.concat "" (List.map print_block sorting)
+  in print_rdx_subrules (sort funcs)
 

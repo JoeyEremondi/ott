@@ -1616,7 +1616,7 @@ let pp_true m in_prop =
   | Hol _ -> "T" 
   | Caml _ -> "true" 
   | Lem _ -> "true"
-  | Rdx _ -> "#t"
+  | Rdx _ -> ""
   | Ascii _ | Tex _ | Twf _ | Lex _ | Menhir _ -> errorm m "pp_true"
 
 let pp_false m in_prop =
@@ -1637,7 +1637,7 @@ let pp_and m in_prop =
   | Isa _ -> " & " 
   | Caml _ -> " && " 
   | Lem _ -> " && "
-  | Rdx _ -> "and "
+  | Rdx _ -> "\n  "
   | Coq co ->
       if co.coq_expand_lists || in_prop
       then " /\\ "     

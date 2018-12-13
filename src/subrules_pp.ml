@@ -424,17 +424,27 @@ let pp_subrules m xd srs : int_funcs_collapsed =
 		   dep := deps @ !dep;
 		   funcs := !funcs @ new_funcs;
                    match m with 
-                   | Coq _ | Hol _ | Lem _| Isa _ | Caml _ | Rdx _ -> (* TODO Rdx here?*) 
-		       if conjuncts = [] 
-                       then Auxl.pp_true m false
-		       else String.concat (Auxl.pp_and m false) conjuncts
-                   | Twf _ -> String.concat "" (List.map (function s -> " <- "^s) conjuncts)
+                   | Coq _ | Hol _ | Lem _| Isa _ | Caml _ ->
+		     if conjuncts = [] 
+       then Auxl.pp_true m false
+       else String.concat (Auxl.pp_and m false) conjuncts
+                   | Rdx _ -> if conjuncts = [] then "" else String.concat (Auxl.pp_and m false) conjuncts
+		       | Twf _ -> String.concat "" (List.map (function s -> " <- "^s) conjuncts)
                    | Lex _ | Menhir _ | Tex _ | Ascii _ -> Auxl.errorm m "pp_subrule"
                   ))
                  pls in
 
-             match m with 
-             | Coq _ | Hol _ | Lem _ | Isa _ | Caml _ | Rdx _ -> (*TODO redex here? *) 
+             match m with
+             | Rdx _ ->
+               if rhss = [] then [] else
+               let rhs = 
+                   if List.length rhss = 1 then (List.hd rhss)
+            else
+              String.concat "\n" ( rhss)
+                 in
+	         
+	         [("", lhs, rhs)]
+             | Coq _ | Hol _ | Lem _ | Isa _ | Caml _  ->  
                  let rhs = 
                    if rhss = [] 
                    then Auxl.pp_false m false
@@ -452,7 +462,9 @@ let pp_subrules m xd srs : int_funcs_collapsed =
       
       let srln = Grammar_pp.pp_nontermroot_ty m xd srl in
       let srlu = Grammar_pp.pp_nontermroot_ty m xd sru in
-   
+
+      let id = Auxl.pp_is srl sru in
+      
       let header =
 	( match m with 
 	| Isa _ -> 
@@ -488,7 +500,8 @@ let pp_subrules m xd srs : int_funcs_collapsed =
 	    ( Auxl.pp_is srl sru ^ " : " 
 	      ^ Grammar_pp.pp_nontermroot_ty m xd sru
        ^ " -> type.\n", "","")
-        | Rdx _ -> ("(error \"TODO Redex subrule header 1 \")", "(error \"TODO Redex subrule header 2 \")", "(error \"TODO Redex subrule header 3 \")")
+        | Rdx _ ->
+          ( "\n#:mode (" ^ id ^ " I )\n", "", "")
         | Tex _ | Ascii _ | Lex _ | Menhir _ -> Auxl.error (Some (Auxl.loc_of_ntr xd srl)) "pp_subprod"
          ) in
 
@@ -504,7 +517,7 @@ let pp_subrules m xd srs : int_funcs_collapsed =
          ) in
 *)
       
-      let id = Auxl.pp_is srl sru in
+     
       
       { r_fun_id = id;
 	r_fun_dep = !dep;

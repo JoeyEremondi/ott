@@ -40,4 +40,12 @@ val compute :
   'a ->
   (string * string list *
    ((string * string * string) * string * Types.footer))
-  list -> string
+    list -> string
+val compute_rdx_subrules :
+  Types.pp_mode ->
+  'a ->
+  (string * string list *
+   ((string * string * string) * string * Types.footer))
+    list -> string
+
+

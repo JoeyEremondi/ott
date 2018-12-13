@@ -159,21 +159,39 @@ let pp_functions fd m sd lookup =
     ( match m with
     | Coq co -> !(Auxl.the co.coq_list_aux_funcs) 
     | _ -> "" ) in
-  output_string fd (Auxl.big_line_comment m "auxiliary functions on the new list types");
-  output_string fd aux_list_functions;
-  output_string fd (Auxl.big_line_comment m "library functions");
-  output_string fd library ;
-  output_string fd (Auxl.big_line_comment m "subrules");
-  output_string fd (Dependency.compute m sd.syntax funcs_subrules);
-  output_string fd (Auxl.big_line_comment m "auxiliary functions");
-  output_string fd (Dependency.compute m sd.syntax auxfns);
-  output_string fd (Auxl.big_line_comment m "free variables");
-  output_string fd (Dependency.compute m sd.syntax freevars);
-  output_string fd (Auxl.big_line_comment m "substitutions");
-  output_string fd (Dependency.compute m sd.syntax substs);
-  output_string fd (Auxl.big_line_comment m "context application");
-  output_string fd (Dependency.compute m sd.syntax contexts);
-  ()
+  match m with
+  | Rdx _ -> (
+    (* output_string fd (Auxl.big_line_comment m "auxiliary functions on the new list types"); *)
+    (* output_string fd aux_list_functions; *)
+    output_string fd (Auxl.big_line_comment m "library functions");
+    output_string fd library ;
+    output_string fd (Auxl.big_line_comment m "subrules");
+    output_string fd (Dependency.compute_rdx_subrules m sd.syntax funcs_subrules);
+    output_string fd (Auxl.big_line_comment m "auxiliary functions");
+    output_string fd (Dependency.compute m sd.syntax auxfns);
+    (* output_string fd (Auxl.big_line_comment m "free variables"); *)
+    (* output_string fd (Dependency.compute m sd.syntax freevars); *)
+    (* output_string fd (Auxl.big_line_comment m "substitutions"); *)
+    (* output_string fd (Dependency.compute m sd.syntax substs); *)
+    (* output_string fd (Auxl.big_line_comment m "context application"); *)
+    (* output_string fd (Dependency.compute m sd.syntax contexts); *)
+    () )
+  | _ -> (
+    output_string fd (Auxl.big_line_comment m "auxiliary functions on the new list types");
+    output_string fd aux_list_functions;
+    output_string fd (Auxl.big_line_comment m "library functions");
+    output_string fd library ;
+    output_string fd (Auxl.big_line_comment m "subrules");
+    output_string fd (Dependency.compute m sd.syntax funcs_subrules);
+    output_string fd (Auxl.big_line_comment m "auxiliary functions");
+    output_string fd (Dependency.compute m sd.syntax auxfns);
+    output_string fd (Auxl.big_line_comment m "free variables");
+    output_string fd (Dependency.compute m sd.syntax freevars);
+    output_string fd (Auxl.big_line_comment m "substitutions");
+    output_string fd (Dependency.compute m sd.syntax substs);
+    output_string fd (Auxl.big_line_comment m "context application");
+    output_string fd (Dependency.compute m sd.syntax contexts);
+    () )
 
 let pp_library fd m = 
   let pp_lib x =
@@ -309,9 +327,12 @@ let pp_struct_entry fd m sd xd_expanded lookup stre : unit =
       let funcs_substitutions =
   	Substs_pp.pp_substs m sd.syntax substitutions in
       pp_library fd m;
-      output_string fd
-	(Auxl.print_with_comment m "\n" "substitutions"
-  	  (pp_locs ^ Dependency.compute m sd.syntax funcs_substitutions))
+      (match m with
+      | Rdx _ -> ()
+      | _ -> 
+        output_string fd
+	  (Auxl.print_with_comment m "\n" "substitutions"
+      (pp_locs ^ Dependency.compute m sd.syntax funcs_substitutions)))
 
   | Struct_crs xs ->
       (* find the relevant contextrules *)
@@ -325,10 +346,14 @@ let pp_struct_entry fd m sd xd_expanded lookup stre : unit =
       let pp_locs = if !Global_option.output_source_locations >=2 then Grammar_pp.pp_source_location m s else "" in
       let contexts = 
         Context_pp.pp_context m sd.syntax lookup contextrules in
-
-      output_string fd
-        (Auxl.print_with_comment m "\n" "context application"
-  	  (pp_locs^Dependency.compute m xd contexts))
+      (
+        match m with
+        | Rdx _ -> ()
+        | _ -> 
+          output_string fd
+            (Auxl.print_with_comment m "\n" "context application"
+  	       (pp_locs^Dependency.compute m xd contexts))
+      )
 
   | Struct_embed embed -> 
       Embed_pp.pp_embeds fd m sd.syntax lookup [embed] (* FIXME should be a list *)

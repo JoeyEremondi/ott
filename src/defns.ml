@@ -83,7 +83,8 @@ let pp_subntr (m: pp_mode) (xd: syntaxdefn): (nontermroot * nontermroot * nonter
 	    | Caml _ | Tex _ | Ascii _ | Lex _ | Menhir _ -> raise Auxl.ThisCannotHappen )
 	     ^ Grammar_pp.pp_suffix_with_sie m xd Bounds.sie_project suff)
       in ( match m with
-      | Coq co when not co.coq_expand_lists -> "Is_true ("^s^")"
+          | Coq co when not co.coq_expand_lists -> "Is_true ("^s^")"
+          | Rdx _ -> "("^s^")"
       | _ -> s )
           
 let pp_listsubntr : pp_mode -> syntaxdefn -> ((nontermroot * nontermroot * nonterm) list * string * string * string) list -> string list =
