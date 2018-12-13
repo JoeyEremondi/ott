@@ -228,7 +228,7 @@ let pp_struct_entry fd m sd xd_expanded lookup stre : unit =
       output_string fd pp_locs;
       ( match m with
       | Rdx ro ->
-          output_string fd ("(define-language "^ro.ppr_default_language^"\n");
+          output_string fd ("(define-language "^ro.ppr_default_language^"  \n");
       | _ -> () );
       output_string fd (Grammar_pp.pp_rule_list m xd_expanded rs);
       ( match m with

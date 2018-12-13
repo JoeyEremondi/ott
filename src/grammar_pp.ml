@@ -2683,16 +2683,18 @@ and pp_rule m xd r = (* returns a string option *)
                 (pp_prod m xd r.rule_ntr_name r.rule_pn_wrapper)
                 r.rule_ps))
   | Rdx ro ->
+    let names = String.concat " " (List.map fst r.rule_ntr_names) in
       if r.rule_meta || r.rule_phantom 
       then None
       else
+        let names = List.map (pp_nontermroot_ty m xd ) ( List.map fst r.rule_ntr_names) in 
         let prods =
           Auxl.option_map 
 	    (pp_prod m xd r.rule_ntr_name r.rule_pn_wrapper)
             r.rule_ps in
         Some 
           ("  ("
-           ^pp_nontermroot_ty m xd r.rule_ntr_name (* ^ " "^pp_com *) ^"\n" 
+           ^String.concat " " names (* ^ " "^pp_com *) ^" ::= \n" 
            ^ String.concat "\n" prods 
            ^")")
  
@@ -3662,9 +3664,12 @@ and pp_symterm_elements' m xd sie de include_terminals prod_es es : (string * te
   debug ("f entry:\nes= [" ^String.concat " ; " (List.map pp_plain_symterm_element es)^"]\nprod_es= ["^String.concat " ; "(List.map pp_plain_element prod_es)^"]\n\n");
     match prod_es, es with
     | [],[] -> []
-    | Lang_terminal tm::prod_es', es -> 
-        if include_terminals then (pp_terminal_unquoted m xd tm,classify_TTC_terminal tm) :: (f prod_es' es)
-        else (f prod_es' es)
+    | Lang_terminal tm::prod_es', es ->
+      (match (tm, m) with
+       | ("__", Rdx _) -> ("hole",classify_TTC_terminal tm) :: (f prod_es' es)
+       | (_,_) -> 
+         if include_terminals then (pp_terminal_unquoted m xd tm,classify_TTC_terminal tm) :: (f prod_es' es)
+         else (f prod_es' es) )
     | Lang_nonterm _ :: prod_es', Ste_st(_,St_nonterm (l,ntrp,nt))::es' -> 
         lem_paren_hack m (pp_nonterm_with_de_with_sie m xd sie de nt,TTC_nonterm_or_metavar) :: (f prod_es' es')
     | Lang_nonterm _ :: prod_es' , Ste_st(_,St_nontermsub (l,ntrpl,ntrpt,nt))::es' -> 
