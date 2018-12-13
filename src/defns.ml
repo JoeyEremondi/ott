@@ -662,8 +662,8 @@ let pp_defnclass fd (m:pp_mode) (xd:syntaxdefn) lookup (dc:defnclass) =
 
 
   | Rdx ro -> 
-    Printf.fprintf fd "\n(define-judgment-form\n  %s" ro.ppr_default_language;
-    iter_asep fd "\nwithDFNS655 "
+    Printf.fprintf fd "\n(define-judgment-form\n  %s" (ro.ppr_default_language);
+    iter_asep fd "\n)\n(define-judgment-form L \n "
       (fun d -> pp_defn fd m xd lookup dc.dc_wrapper universe d)
       dc.dc_defns;
       output_string fd ")\n"

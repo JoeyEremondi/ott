@@ -2858,7 +2858,7 @@ and pp_rule_list m xd rs =
   | Twf wo ->
       int_rule_list_dep m xd rs (fun rs -> "") "\n" ""
   | Rdx ro ->
-      int_rule_list_dep m xd rs (fun rs -> "") "\n  grammar_pp, 2817: and " ""
+      int_rule_list_dep m xd rs (fun rs -> "") "\n  ;grammar_pp, 2817: and " ""
   | Caml oo ->
       int_rule_list_dep m xd rs (fun rs -> "\ntype \n") "\nand " ""
   | Lem lo ->
