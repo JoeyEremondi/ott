@@ -34,6 +34,7 @@
 open Types;;
 
 
+
 (* Print auxiliary lemmas if necessary *)
 
 let rec uses_lists_element e =
@@ -211,6 +212,43 @@ let pp_library fd m =
     | Rdx ro -> ()
     | Ascii _ | Tex _ | Lex _ | Menhir _ -> Auxl.errorm m "pp_library"
 
+let rdx_binders_pp m xd (rs : Types.rule list) =
+  let (Rdx ro) = m in 
+  let for_prod (p : Types.prod) =
+      
+    let bnds = Auxl.option_map (fun b -> match b with
+        | Bind (_,y,x) -> Some (x,y)
+        | _ -> None
+      ) p.prod_bs in
+    let pp_elem_with_bind (elem : Types.element) =
+      match elem with
+        | Lang_metavar (mvrp,mv) ->  
+            Some  (Grammar_pp.pp_metavar m xd mv) 
+        | Lang_nonterm (ntrp, nt) ->
+          let ntrp' = Auxl.promote_ntr xd ntrp in
+          let s = Grammar_pp.pp_nonterm m xd nt in 
+            (match List.assoc_opt nt bnds with
+            | None -> Some s 
+            | Some bnd ->
+                Some (s ^ " #:refers-to (shadow " ^ (Grammar_pp.pp_mse_string m xd [] ([],[]) bnd) ^ ")" ))
+          | _ -> (Grammar_pp.pp_element m xd [] true elem) 
+    in
+    if (List.length bnds) = 0 then None else 
+    let es = Grammar_pp.apply_hom_order m xd p in
+        let ss = Auxl.option_map pp_elem_with_bind es in
+        ( match List.length ss with
+          | 0 -> Some ("    "^p.prod_name)
+          | 1 -> ( match es with
+              | [ Lang_metavar (mvr,mvs) ] ->
+                let mvp = List.hd ss in
+                if not (Auxl.mvd_of_mvr xd mvr).mvd_phantom
+                then ro.ppr_metavars := mvp :: !(ro.ppr_metavars);
+                Some ("    " ^ mvp)
+              | _ -> Some ("    (" ^ p. prod_name ^ " " ^ String.concat " " ss ^ ")") )
+          | _ -> Some ("    (" ^ p. prod_name ^ " " ^ String.concat " " ss ^ ")") ) in
+  let for_rule r = String.concat "\n" (Auxl.option_map for_prod r.rule_ps) in
+  String.concat "\n" (List.map for_rule rs)
+  
 let pp_struct_entry fd m sd xd_expanded lookup stre : unit =
   pp_library fd m;
   ( let xd = sd.syntax in
@@ -235,7 +273,8 @@ let pp_struct_entry fd m sd xd_expanded lookup stre : unit =
         | Rdx ro ->
           output_string fd (String.concat ""
                               (List.map (fun mvs -> "  ("
-                                ^mvs^" variable-not-otherwise-mentioned)\n") !(ro.ppr_metavars)));
+                                                    ^mvs^" variable-not-otherwise-mentioned)\n") !(ro.ppr_metavars)));
+          output_string fd ("\n    #:binding-forms\n" ^ rdx_binders_pp m xd rs);
           output_string fd (")\n");
       | _ -> () );
       (* induction_principles_rules *)

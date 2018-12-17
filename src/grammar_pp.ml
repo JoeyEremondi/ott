@@ -1790,7 +1790,8 @@ and pp_mse m xd sie de isa_list_name_flag prod_name ntmvro mse : string * nonter
       | Ascii _ | Tex _ -> (* "\\{" ^*)  pp_metavar_with_sie m xd sie mv (* ^ "\\}" *)
       | Isa _ | Hol _ | Lem _ | Caml _ -> "["^pp_metavar_with_sie m xd sie mv^"]"
       | Coq _ -> "(cons " ^ pp_metavar_with_sie m xd sie mv ^ " nil)" 
-      | Twf _ -> "(natlist/cons " ^ pp_metavar_with_sie m xd sie mv ^ " natlist/nil)" ), [], []
+      | Twf _ -> "(natlist/cons " ^ pp_metavar_with_sie m xd sie mv ^ " natlist/nil)"
+      | Rdx _ -> pp_metavar_with_sie m xd sie mv), [], []
   | NonTermExp nt -> 
       ( match m with
       | Lex _ | Menhir _ -> Auxl.errorm m "pp_mse"
@@ -2271,7 +2272,8 @@ and pp_element m xd sie in_type e =
         | Lang_metavar (mvrp,mv) ->  
             Some (check_conflict (pp_metavar m xd mv) (pp_metavarroot_ty m xd mvrp))
         | Lang_terminal tm ->  
-            (match m with
+          (match m with
+           | Rdx oo when tm = "__" -> Some (None, "hole")
             | Caml oo when oo.ppo_include_terminals -> Some (None, "terminal")
             | _ -> None)
         | Lang_option es ->
@@ -2684,6 +2686,7 @@ and pp_rule m xd r = (* returns a string option *)
                 r.rule_ps))
   | Rdx ro ->
     let names = String.concat " " (List.map fst r.rule_ntr_names) in
+    let bndrs = List.concat (List.map ( fun x -> x.prod_bs) r.rule_ps ) in
       if r.rule_meta || r.rule_phantom 
       then None
       else
