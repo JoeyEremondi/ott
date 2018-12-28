@@ -72,8 +72,8 @@ let fake_rhs m xd (hole:nonterm) (r:rule) (p:prod) =
 
 let context_app_rhs m xd lookup (hole:nonterm) (target:nontermroot) (r:rule) (p:prod) : bool * string option =
   try
-    let fake_rhs = fake_rhs m xd hole r p in 
 (*    print_endline ("*** fr:"^fake_rhs); *)
+    let fake_rhs = fake_rhs m xd hole r p in 
     (*parse the fake rhs*)
     let sts = Term_parser.parse_complete lookup target false fake_rhs in 
     let sts_e = 
@@ -101,7 +101,8 @@ let pp_prod_context m xd lookup (hole:nonterm) (target:nontermroot) (r:rule) (p:
   let lhs_pat = Grammar_pp.pp_symterm m xd sie de lhs_st in
   let lhs = 
     ( match m with
-      | Coq _ | Caml _ | Rdx _ -> lhs_pat (* TODO redex here?*)
+      | Coq _ | Caml _ -> lhs_pat (* TODO redex here?*)
+      | Rdx _ -> "(error \"rdx pp prod LHS \")"
     | Isa _ | Hol _ | Lem _ | Twf _ -> lhs_pat ^ " " ^ Grammar_pp.pp_nonterm m xd hole
     | Lex _ | Menhir _ | Tex _ | Ascii _ -> assert false) in
   (* compute the rhs *)

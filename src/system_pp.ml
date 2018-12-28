@@ -272,8 +272,8 @@ let pp_struct_entry fd m sd xd_expanded lookup stre : unit =
       ( match m with
         | Rdx ro ->
           output_string fd (String.concat ""
-                              (List.map (fun mvs -> "  ("
-                                                    ^mvs^" variable-not-otherwise-mentioned)\n") !(ro.ppr_metavars)));
+                              (List.map (fun mvs -> "   ("
+                                                    ^mvs^" ::= variable-not-otherwise-mentioned)\n") !(ro.ppr_metavars)));
           output_string fd ("\n    #:binding-forms\n" ^ rdx_binders_pp m xd rs);
           output_string fd (")\n");
       | _ -> () );

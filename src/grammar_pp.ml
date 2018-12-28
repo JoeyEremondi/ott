@@ -2523,6 +2523,10 @@ and pp_prod m xd rnn rpw p = (* returns a string option *)
   | Rdx ro ->
       if p.prod_meta then
         None
+        (* TODO Joey add check for context rule here
+           Need mapping from Prod Names to Prod Names*)
+      else if false then
+        None
       else (
         (* pp_elements is not flexible enough, so invoke pp_element manually *)
         let es = apply_hom_order m xd p in

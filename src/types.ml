@@ -319,6 +319,7 @@ and syntaxdefn = (* xd *)  (* all the nt occurrences are fully resolved *)
       xd_srs : subrule list;           
       xd_srd : subrule_data;
       xd_crs : contextrule list;
+      xd_crd : subrule_pn_promotion;
       xd_axs : (auxfn * auxfn_type) list;
       xd_sbs : subst list;
       xd_fvs : freevar list;

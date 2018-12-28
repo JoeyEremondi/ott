@@ -1242,10 +1242,12 @@ and cd_subrules c (rsrs:raw_subrule list) : subrule list * subrule_data=
 
 
 
-and cd_contextrule c (cr:raw_contextrule) : contextrule =
-  try
-    { cr_ntr = c.primary_ntr_of_ntr cr.raw_cr_ntr;
-      cr_target = c.primary_ntr_of_ntr cr.raw_cr_target;
+and cd_contextrule c (cr:raw_contextrule) : contextrule * (nontermroot * (nontermroot * (prodname*prodname) list)) =
+  let cntr = c.primary_ntr_of_ntr cr.raw_cr_ntr in
+  let trg = c.primary_ntr_of_ntr cr.raw_cr_target in
+  let cr = try
+    { cr_ntr = cntr;
+      cr_target = trg ;
       cr_hole = c.primary_ntr_of_ntr cr.raw_cr_hole;
       cr_homs = List.map (cd_hom Hu_deadcode c []) cr.raw_cr_homs; (* TODO is that [] sensible? *)
       cr_loc = cr.raw_cr_loc }
@@ -1255,6 +1257,7 @@ and cd_contextrule c (cr:raw_contextrule) : contextrule =
         (Auxl.loc_of_raw_contextrule cr)
         "undefined nonterminal root used in context rule declaration"
         ""
+  in (cr, (cntr, (trg, []))) (*TODO Joey check this*)
 and cd_subst c (srs:subrule list) (subst:raw_subst) : subst =
   let l = (Auxl.loc_of_raw_subst subst) in
   let this = 
@@ -1989,6 +1992,7 @@ let rec check_and_disambiguate m_tex (quotient_rules:bool) (generate_aux_rules:b
         [] rsd'.raw_sd_embed) in
    
   let xd =
+    let (crs, crd) =  List.split (List.map (cd_contextrule c) rsd'.raw_sd_crs) in
     let srs,srd = cd_subrules c rsd'.raw_sd_srs in
     let rs = List.map (cd_rule c) rsd'.raw_sd_rs in
     let all_prod_names = List.flatten (List.map (fun r -> List.map (fun p->p.prod_name) r.rule_ps) rs) in
@@ -2016,7 +2020,8 @@ let rec check_and_disambiguate m_tex (quotient_rules:bool) (generate_aux_rules:b
       xd_dep = List.map (fun x -> (x,empty_dependencies)) ("ascii"::targets);
       xd_srs = srs;
       xd_srd = srd;
-      xd_crs = List.map (cd_contextrule c) rsd'.raw_sd_crs;
+      xd_crs = crs;
+      xd_crd = crd;
       xd_axs = [];  (* this is overridden by something more sensible below *)
       xd_sbs = List.map (cd_subst c srs) rsd'.raw_sd_sbs;
       xd_fvs = List.map (cd_freevar c srs) rsd'.raw_sd_fvs;
