@@ -2623,7 +2623,7 @@ and pp_prod m xd rnn rpw p = (* returns a string option *)
 
 and pp_internal_coq_buffer = ref "" (* FZ HACK *)
 
-and pp_rule m xd lookup r  = (* returns a string option *)
+and pp_rule m xd crfn r  = (* returns a string option *)
   let pp_com = pp_com_strings m xd r.rule_homs [pp_nonterm_with_sie m xd [] (r.rule_ntr_name,[])] in
   let result : string option = 
   match m with 
@@ -2697,11 +2697,15 @@ and pp_rule m xd lookup r  = (* returns a string option *)
         ( let names = List.map (pp_nontermroot_ty m xd ) ( List.map fst r.rule_ntr_names) in 
         
           match List.assoc_opt r.rule_ntr_name (xd.xd_crd) with
-          | Some (trg, _) -> None
-            (* let prods =
-             *   Auxl.option_map 
-	     * (Context_pp.pp_prod_context m xd lookup r.rule_ntr)
-             * r.rule_ps in *)
+          | Some cr ->
+            let Some cr_prodfn = crfn in
+            let hole = ("hole", []) in
+            let target = "" in
+            let prods =
+              List.map
+	    (cr_prodfn hole target r)
+     r.rule_ps in
+            None 
          | None ->
            let prods =
           Auxl.option_map 
@@ -2763,7 +2767,7 @@ and         (* the strip_surrounding_parens is a horrible hack to remove the par
   if s.[0]='(' && s.[String.length s -1]=')' then String.sub s 1 (String.length s -2) else s 
 
 
-and pp_rule_list m xd (lookup : Types.made_parser option) rs = 
+and pp_rule_list m xd crfn rs = 
   (* FZ why rs is a rule list instead of a rulename list? *)
   let ntrs_rs = List.map (fun r -> r.rule_ntr_name) rs in
 
@@ -2839,7 +2843,7 @@ and pp_rule_list m xd (lookup : Types.made_parser option) rs =
 		        ( fun nm -> 
 		          ( match nm with
 		          | Mvr mvr -> None
-		          | Ntr ntr -> pp_rule m xd lookup (Auxl.rule_of_ntr xd ntr) ))
+		          | Ntr ntr -> pp_rule m xd crfn (Auxl.rule_of_ntr xd ntr) ))
 		        b ) in
 	        if (String.length def_string) = 0 then ""
 	        else 
@@ -2858,7 +2862,7 @@ and pp_rule_list m xd (lookup : Types.made_parser option) rs =
   match m with 
   | Ascii ao -> 
       if (Auxl.select_dep_ts m xd.xd_dep) = [] 
-      then String.concat "\n" (Auxl.option_map (pp_rule m xd lookup) rs) ^ "\n" 
+      then String.concat "\n" (Auxl.option_map (pp_rule m xd crfn) rs) ^ "\n" 
       else int_rule_list_dep m xd rs (fun rs -> "\n") "\n" ""
   | Isa io ->
       int_rule_list_dep m xd rs 
@@ -2881,7 +2885,7 @@ and pp_rule_list m xd (lookup : Types.made_parser option) rs =
   | Lem lo ->
       int_rule_list_dep m xd rs (fun rs -> "\ntype ") "\nand " ""
   | Tex xo ->
-      String.concat "\n" (Auxl.option_map (pp_rule m xd lookup) rs) 
+      String.concat "\n" (Auxl.option_map (pp_rule m xd crfn) rs) 
       ^ "\n" 
       ^ "\\newcommand{"^pp_tex_RULES_NAME m^"}{"
       ^ pp_tex_BEGIN_RULES m
@@ -2898,7 +2902,7 @@ and pp_rule_list m xd (lookup : Types.made_parser option) rs =
       ^ (match rs with []-> "" | _ -> pp_tex_AFTERLASTRULE_NAME m)
       ^ "\n"^pp_tex_END_RULES ^ "}\n\n"
   | Lex _ | Menhir _ ->
-      String.concat "\n" (Auxl.option_map (pp_rule m xd lookup) rs) 
+      String.concat "\n" (Auxl.option_map (pp_rule m xd crfn) rs) 
  
 
 and pp_ascii_subrule m xd sr = 

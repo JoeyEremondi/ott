@@ -1242,7 +1242,7 @@ and cd_subrules c (rsrs:raw_subrule list) : subrule list * subrule_data=
 
 
 
-and cd_contextrule c (cr:raw_contextrule) : contextrule * (nontermroot * (nontermroot * (prodname*prodname) list)) =
+and cd_contextrule c (cr:raw_contextrule) : (nontermroot * contextrule ) =
   let cntr = c.primary_ntr_of_ntr cr.raw_cr_ntr in
   let trg = c.primary_ntr_of_ntr cr.raw_cr_target in
   let cr = try
@@ -1257,7 +1257,7 @@ and cd_contextrule c (cr:raw_contextrule) : contextrule * (nontermroot * (nonter
         (Auxl.loc_of_raw_contextrule cr)
         "undefined nonterminal root used in context rule declaration"
         ""
-  in (cr, (cntr, (trg, []))) (*TODO Joey check this*)
+  in (cntr, cr) (*TODO Joey check this*)
 and cd_subst c (srs:subrule list) (subst:raw_subst) : subst =
   let l = (Auxl.loc_of_raw_subst subst) in
   let this = 
@@ -1992,7 +1992,8 @@ let rec check_and_disambiguate m_tex (quotient_rules:bool) (generate_aux_rules:b
         [] rsd'.raw_sd_embed) in
    
   let xd =
-    let (crs, crd) =  List.split (List.map (cd_contextrule c) rsd'.raw_sd_crs) in
+    let crd =  (List.map (cd_contextrule c) rsd'.raw_sd_crs) in
+    let crs = List.map snd crd in
     let srs,srd = cd_subrules c rsd'.raw_sd_srs in
     let rs = List.map (cd_rule c) rsd'.raw_sd_rs in
     let all_prod_names = List.flatten (List.map (fun r -> List.map (fun p->p.prod_name) r.rule_ps) rs) in

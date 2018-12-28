@@ -268,7 +268,7 @@ let pp_struct_entry fd m sd xd_expanded lookup stre : unit =
       | Rdx ro ->
           output_string fd ("(define-language "^ro.ppr_default_language^"  \n");
       | _ -> () );
-      output_string fd (Grammar_pp.pp_rule_list m xd_expanded (Some lookup) rs);
+      output_string fd (Grammar_pp.pp_rule_list m xd_expanded (Some (Context_pp.pp_prod_context m xd lookup)) rs);
       ( match m with
         | Rdx ro ->
           output_string fd (String.concat ""
