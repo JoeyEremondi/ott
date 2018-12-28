@@ -428,7 +428,8 @@ let pp_subrules m xd srs : int_funcs_collapsed =
 		     if conjuncts = [] 
        then Auxl.pp_true m false
        else String.concat (Auxl.pp_and m false) conjuncts
-                   | Rdx _ -> if conjuncts = [] then "" else String.concat (Auxl.pp_and m false) conjuncts
+                   | Rdx _ -> ""
+                     (* if conjuncts = [] then "" else String.concat (Auxl.pp_and m false) conjuncts *)
 		       | Twf _ -> String.concat "" (List.map (function s -> " <- "^s) conjuncts)
                    | Lex _ | Menhir _ | Tex _ | Ascii _ -> Auxl.errorm m "pp_subrule"
                   ))

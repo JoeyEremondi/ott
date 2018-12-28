@@ -2624,6 +2624,7 @@ and pp_prod m xd rnn rpw p = (* returns a string option *)
 and pp_internal_coq_buffer = ref "" (* FZ HACK *)
 
 and pp_rule m xd crfn r  = (* returns a string option *)
+  print_string ("PP RULE " ^ r.rule_ntr_name ^ "\n");
   let pp_com = pp_com_strings m xd r.rule_homs [pp_nonterm_with_sie m xd [] (r.rule_ntr_name,[])] in
   let result : string option = 
   match m with 
@@ -2691,25 +2692,39 @@ and pp_rule m xd crfn r  = (* returns a string option *)
   | Rdx ro ->
     let names = String.concat " " (List.map fst r.rule_ntr_names) in
     let bndrs = List.concat (List.map ( fun x -> x.prod_bs) r.rule_ps ) in
-      if r.rule_meta || r.rule_phantom 
-      then None
-      else
+    print_string ("PP RULE " ^ r.rule_ntr_name ^ " is meta or phantom " ^ ( if r.rule_meta || r.rule_phantom then "true" else "false") ^ "\n");
+      (* if (r.rule_meta || r.rule_phantom) && (match m with | Rdx _ -> false | _ -> true) 
+       * then None
+       * else *)
         ( let names = List.map (pp_nontermroot_ty m xd ) ( List.map fst r.rule_ntr_names) in 
-        
+          let prodMod = if (r.rule_meta || r.rule_phantom)
+            then (fun p -> match List.assoc_opt p.prod_name (snd (List.assoc r.rule_ntr_name xd.xd_srd.srd_subrule_pn_promotion)) with
+                | None -> p
+                | Some pn -> { p with  prod_name = pn })
+            else (fun x -> x ) in
           match List.assoc_opt r.rule_ntr_name (xd.xd_crd) with
           | Some cr ->
-            let Some cr_prodfn = crfn in
-            let hole = ("hole", []) in
-            let target = "" in
+            let Some (cr_prodfn :  nonterm -> nontermroot -> rule -> prod -> string * string * string) = crfn in
+            let hole = (cr.cr_hole, []) in (* TODO Joey add suffix to avoid collisions?*)
+            let holestr = pp_nonterm m xd hole in
+            let target = cr.cr_target in
+            let prodString (_,_,p) = p in
+            let rgx = Str.regexp_string (pp_nonterm m xd hole) in
+            let hole_var = "hole" in
+            let insertHole = Str.replace_first rgx hole_var in
             let prods =
               List.map
-	    (cr_prodfn hole target r)
+	    (fun p -> insertHole (prodString (cr_prodfn hole target r (prodMod p))))
      r.rule_ps in
-            None 
+            Some 
+            ("  ("
+             ^String.concat " " names (* ^ " "^pp_com *) ^" ::= \n    " 
+             ^ String.concat "\n    " prods 
+             ^")")
          | None ->
            let prods =
           Auxl.option_map 
-	    (pp_prod m xd r.rule_ntr_name r.rule_pn_wrapper)
+	    (fun p -> pp_prod m xd r.rule_ntr_name r.rule_pn_wrapper (prodMod p))
             r.rule_ps in
           Some 
             ("  ("

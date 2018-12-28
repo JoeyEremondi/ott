@@ -276,6 +276,7 @@ let pp_struct_entry fd m sd xd_expanded lookup stre : unit =
                                                     ^mvs^" ::= variable-not-otherwise-mentioned)\n") !(ro.ppr_metavars)));
           output_string fd ("\n    #:binding-forms\n" ^ rdx_binders_pp m xd rs);
           output_string fd (")\n");
+          output_string fd (";; BLOCK " ^ String.concat " " ntrs )
       | _ -> () );
       (* induction_principles_rules *)
       ( match m with

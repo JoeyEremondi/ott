@@ -74,7 +74,10 @@ let rn_formula="formula"
 (** ******************************** *)
 
 let pp_subntr (m: pp_mode) (xd: syntaxdefn): (nontermroot * nontermroot * nonterm) -> string = 
-    function (ntrl,ntru,(ntr',suff)) ->
+  function (ntrl,ntru,(ntr',suff)) ->
+  match m with
+  | Rdx _ -> ""
+  | _ -> 
       let s = 
 	Auxl.pp_is ntrl ntru ^ " " 
 	^ Auxl.hide_isa_trailing_underscore m
