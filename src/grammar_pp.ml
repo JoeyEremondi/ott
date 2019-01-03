@@ -1481,6 +1481,12 @@ and pp_hom_spec_el m xd hse =
       | Hom_terminal s -> s
       | Hom_index i -> "UNIMPLEMENTED[Hom_index"^string_of_int i^"]"
       | Hom_ln_free_index _ -> Auxl.errorm m "pp_hom_spec el")
+  | Rdx _ ->
+    ( match hse with
+      | Hom_string s -> s
+      | Hom_terminal s -> Auxl.errorm m "pp_hom_spec_el"
+      | Hom_index i -> "(error \"UNIMPLEMENTED\")"
+      | Hom_ln_free_index _ -> Auxl.errorm m "pp_hom_spec el")
 
 and pp_plain_suffix suff = String.concat "" (List.map pp_plain_suffix_item suff)
         
@@ -1540,8 +1546,19 @@ and pp_suffix_with_sie m xd sie suff =
           "_{"
           ^ String.concat "\\," (List.map (pp_suffix_item_with_sie m xd sie true) suff_subscript)
           ^ "}")
-  | (Coq _ | Isa _ | Hol _ | Lem _ | Twf _ | Rdx _ | Caml _ | Lex _ | Menhir _) ->
+  | Rdx _ -> pp_rdx_suffix_items m xd sie suff
+  | (Coq _ | Isa _ | Hol _ | Lem _ | Twf _  | Caml _ | Lex _ | Menhir _) ->
       (String.concat "" (List.map (pp_suffix_item_with_sie m xd sie false) suff)) 
+
+and pp_rdx_suffix_items m xd sie suff =
+  match suff with
+  | [] -> ""
+  | _ -> "_" ^ 
+         let (nums, rest1) = List.partition (fun x -> match x with | Si_num s -> true | _ -> false) suff in
+         let (primes, rest2) = List.partition (fun x -> match x with | Si_punct "'" -> true | _ -> false ) suff in
+         let newsuff = nums @ rest2 @ (List.map (fun _ -> Si_punct "^") primes )in
+         (String.concat "" (List.map (pp_suffix_item_with_sie m xd sie false) newsuff)) 
+      
 
 
 and pp_suffix_item_with_sie m xd sie nosubscript suffi = 
@@ -2808,7 +2825,7 @@ and pp_rule_list m xd crfn rs =
             (* and we generate a type abbreviation *)
             | [Ntr ntr] 
               when (None<>Auxl.hom_spec_for_pp_mode m(Auxl.rule_of_ntr xd ntr).rule_homs 
-                      & match m with Isa _ | Coq _ | Hol _ | Lem _ | Caml _ -> true | _ -> false) 
+                      & match m with Isa _ | Coq _ | Hol _ | Lem _ | Caml _ | Rdx _ -> true | _ -> false) 
               ->
 (* PS hack to turn off printing of phantom nonterms which would otherwise turn into type abbreviations.  Please check - maybe this should be before dependency analysis??? *)
                 if (Auxl.rule_of_ntr xd ntr).rule_phantom then "" else 
@@ -2843,6 +2860,11 @@ and pp_rule_list m xd crfn rs =
                     ^ pp_nontermroot_ty m xd ntr ^ " = "
                     ^ pp_hom_spec m xd hs
                     ^ "\n\n"
+                | Rdx _ -> 
+                    "\n("
+                    ^ pp_nontermroot_ty m xd ntr ^ " ::= "
+                    ^ pp_hom_spec m xd hs
+                    ^ ")\n\n"
                 | Lem _ -> 
                     "\ntype "
                     ^ strip_surrounding_parens (pp_nontermroot_ty m xd ntr) ^ " = "

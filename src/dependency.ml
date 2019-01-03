@@ -594,18 +594,18 @@ let collapse m xd (funcs:int_funcs) : int_funcs_collapsed =
 let print m xd (sorting,refl) =
   match m with
   | Tex _ | Ascii _ -> Auxl.error None "internal: print of Tex-Ascii\n"
-  | Rdx _ ->
-    let print_block block =
-	if ((List.length block) = 1) 
-	then 
-	  let (nt,((h1,h2,h3),s,_)) = List.hd block in
-	  "(define-judgment-form L " ^ h1 ^ h2 ^ h3 ^ s ^ ")\n\n" 
-	else
-	  "(define-judgment-form L "
-	  ^ (String.concat ")\n(define-judgment-form L " 
-               (List.map (fun (_,((h1,h2,h3),s,_)) -> h1 ^ h2 ^ h3 ^ s) block))
-	  ^ ")" in
-      "; DEPENDENCIES" ^ string_of_int (List.length sorting) ^ "\n"^ String.concat "" (List.map print_block sorting)
+  | Rdx _ -> ""
+    (* let print_block block =
+     *     if ((List.length block) = 1) 
+     *     then 
+     *       let (nt,((h1,h2,h3),s,_)) = List.hd block in
+     *       "(define-judgment-form L " ^ h1 ^ h2 ^ h3 ^ s ^ ")\n\n" 
+     *     else
+     *       "(define-judgment-form L "
+     *       ^ (String.concat ")\n(define-judgment-form L " 
+     *            (List.map (fun (_,((h1,h2,h3),s,_)) -> h1 ^ h2 ^ h3 ^ s) block))
+     *       ^ ")" in
+     *   "; DEPENDENCIES" ^ string_of_int (List.length sorting) ^ "\n"^ String.concat "" (List.map print_block sorting) *)
   | Isa io ->
       let print_lemma block = 
 	if ( List.exists 
@@ -754,5 +754,6 @@ let compute_rdx_subrules m xd (funcs:int_funcs_collapsed) =
                (List.map (fun (_,((h1,h2,h3),s,_)) -> h1 ^ h2 ^ h3 ^ s) block))
 	  ^ ")" in
       "; DEPENDENCIES" ^ string_of_int (List.length sorting) ^ "\n"^ String.concat "" (List.map print_block sorting)
-  in print_rdx_subrules (sort funcs)
+  in ""
+  (* print_rdx_subrules (sort funcs) *)
 
