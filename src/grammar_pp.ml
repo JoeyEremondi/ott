@@ -919,6 +919,7 @@ and pp_terminal m xd tm =
   | Isa _ -> pp_isa_terminal m xd tm
   | Hol _ -> tm
   | Lem _ -> tm
+  | Rdx ro when ro.ppr_ascii -> "\"" ^ tm ^ "\""
   | Rdx _ -> tm
   | Twf _ -> tm
   | Caml _ -> "_" (* tm *)
@@ -933,6 +934,7 @@ and pp_terminal_unquoted m xd tm =
   | Hol _ -> tm
   | Lem _ -> tm
   | Twf _ -> tm
+  | Rdx ro when ro.ppr_ascii -> "\"" ^ tm ^ "\""
   | Caml _ -> "_" (* tm *)
   | Lex _ | Menhir _ -> tm
 
@@ -1036,6 +1038,7 @@ and pp_nonterm_with_sie_internal as_type m xd sie (ntr,suff) =
         let s = match m with
         | Caml _ -> (match auxparam_prefix_opt with Some p -> p^" "^s1 | None -> s1)
         | Lem _ -> (match auxparam_prefix_opt with Some p -> "("^s1^" "^p^")" | None -> s1)
+        | Rdx ro when ro.ppr_escape_nonterms -> "," ^ s1
         | _ -> s1 in
         s
   end
@@ -1075,10 +1078,11 @@ and pp_metavar_with_sie_internal as_type m xd sie (mvr,suff) =
         | None,Some hs -> (* use per-mvd hom *)
             String.concat "" 
               (apply_hom_spec m xd hs 
-                 [Auxl.pp_tex_escape mvr^(pp_suffix_with_sie m xd sie suff)]))
+                 [Auxl.pp_tex_escape mvr^(pp_suffix_with_sie m xd sie suff)])) 
 
-    | Coq _ | Isa _ | Hol _ | Lem _ | Twf _ | Rdx _ | Caml _ | Lex _ | Menhir _ -> 
-        let s = pp_mvr ^ (pp_suffix_with_sie m xd sie suff) in
+    | Coq _ | Isa _ | Hol _ | Lem _ | Twf _ | Rdx _ | Caml _ | Lex _ | Menhir _ ->
+        let sescape = match m with | Rdx ro when ro.ppr_escape_nonterms -> "," | _ -> "" in
+        let s = sescape ^ pp_mvr ^ (pp_suffix_with_sie m xd sie suff) in
         if as_type then s
         else Auxl.hide_isa_trailing_underscore m s
   end
@@ -2221,9 +2225,10 @@ and pp_plain_element e =
   | Lang_sugaroption tm ->   "(Lang_sugaroption "^pp_plain_terminal tm^")"
   | Lang_list elb ->  "(Lang_list "^String.concat " " (List.map pp_plain_element elb.elb_es)^")"
 
-and pp_element m xd sie in_type e = 
+and pp_element m xd sie in_type e =
+  let rdxAscii = match m with | Rdx ro when ro.ppr_ascii -> true | _ -> false in 
   match m with
-  | Ascii _ | Tex _ ->
+  | Ascii _ | Tex _ | Rdx _ when rdxAscii ->
       ignore("pp element refactoring in progress");
 (* TODO: SHOULD WE USE pp_symterm TO DO THIS FOR Ascii AND Tex, TO AVOID REPETITION OF ALL THE FANCY DOTFORM CODE AND ENSURE CONSISTENCY?*)
 (*  This is now only called from the point marked FOOBAZ in pp_com_es and two points in defns.ml.  It should be replaced by the generation of appropriate symterms and then pp of them, to avoid duplication of listform code (which is supported for symterms but not yet here *)
@@ -2283,6 +2288,12 @@ and pp_element m xd sie in_type e =
         else Some v, t in
       let vto = 
         ( match e with
+          | Lang_nonterm (ntrp,nt) when (match m with |Rdx ro when ro.ppr_escape_nonterms -> true | _ -> false )  ->
+            let s = pp_nonterm_with_sie m xd sie nt in 
+            Some (check_conflict s s)
+        | Lang_metavar (mvrp,mv) when (match m with |Rdx ro when ro.ppr_escape_nonterms -> true | _ -> false )  ->  
+            let s = pp_metavar_with_sie m xd sie mv in 
+            Some (check_conflict s s)
         | Lang_nonterm (ntrp,nt) ->   
             let ntrp' = Auxl.promote_ntr xd ntrp in 
             Some (check_conflict (pp_nonterm m xd nt) (pp_nontermroot_ty m xd ntrp'))
@@ -2540,24 +2551,30 @@ and pp_prod m xd rnn rpw p = (* returns a string option *)
   | Rdx ro ->
       if p.prod_meta then
         None
-        (* TODO Joey add check for context rule here
-           Need mapping from Prod Names to Prod Names*)
-      else if false then
-        None
       else (
+        if (not (ro.ppr_ascii || ro.ppr_escape_nonterms )) then (
+        let m_lhs = Rdx {ro with ppr_escape_nonterms = true} in 
+        let m_rhs = Rdx {ro with ppr_ascii = true} in
+        let rewrite_lhs = pp_prod m_lhs xd rnn rpw p  in
+        let rewrite_rhs = pp_prod m_rhs xd rnn rpw p in
+        match (rewrite_lhs, rewrite_rhs) with
+        | (Some lhs, Some rhs) -> ro.ppr_rewrites := (lhs, rhs) :: !(ro.ppr_rewrites)
+        | _ -> () )
+      else ();
         (* pp_elements is not flexible enough, so invoke pp_element manually *)
         let es = apply_hom_order m xd p in
         let ss = Auxl.option_map (pp_element m xd [] false) es in
+        let pname = if ro.ppr_ascii then "list" else p.prod_name in
         ( match List.length ss with
           | 0 -> Some ("    "^p.prod_name)
           | 1 -> ( match es with
               | [ Lang_metavar (mvr,mvs) ] ->
                 let mvp = List.hd ss in
-                if not (Auxl.mvd_of_mvr xd mvr).mvd_phantom
+                if not ((Auxl.mvd_of_mvr xd mvr).mvd_phantom || ro.ppr_escape_nonterms || ro.ppr_ascii)
                 then ro.ppr_metavars := mvp :: !(ro.ppr_metavars);
                 Some ("    " ^ mvp)
-              | _ -> Some ("    (" ^ p. prod_name ^ " " ^ String.concat " " ss ^ ")") )
-          | _ -> Some ("    (" ^ p. prod_name ^ " " ^ String.concat " " ss ^ ")") ))
+              | _ -> Some ("    (" ^ pname ^ " " ^ String.concat " " ss ^ ")") )
+          | _ -> Some ("    (" ^ pname ^ " " ^ String.concat " " ss ^ ")") ))
 
   | Twf _ ->
       if p.prod_meta then
@@ -3268,6 +3285,7 @@ and pp_symterm_node_body m xd sie de stnb : string =
   | None -> 
       let include_terminals = 
         match m with
+        | Rdx ro when ro.ppr_ascii -> true
         | Ascii _ | Tex _ | Lex _ | Menhir _ -> true
         | Coq _ | Isa _ | Hol _ | Lem _ | Rdx _ | Twf _  -> false
         | Caml oo -> oo.ppo_include_terminals in
@@ -3275,7 +3293,8 @@ and pp_symterm_node_body m xd sie de stnb : string =
       let pp_es () = pp_symterm_elements m xd sie de include_terminals prod_es stnb.st_es in
       match m with
       | Lex _ | Menhir _ -> Auxl.errorm m "pp_symterm_node_body"
-      | Ascii _  -> String.concat " " (pp_es())
+      | Ascii _   -> String.concat " " (pp_es())
+      | Rdx ro when ro.ppr_ascii -> String.concat " " (pp_es()) 
       | Tex _ -> 
           ( match stnb.st_prod_name with
           | "formula_dots" -> String.concat " \\quad " (pp_es())
@@ -3722,6 +3741,8 @@ and pp_symterm_elements' m xd sie de include_terminals prod_es es : (string * te
     | [],[] -> []
     | Lang_terminal tm::prod_es', es ->
       (match (tm, m) with
+       | (_, Rdx ro  ) when ro.ppr_ascii ->   (pp_terminal_unquoted m xd tm ,classify_TTC_terminal tm) :: (f prod_es' es)
+         
        | ("__", Rdx _) -> ("hole",classify_TTC_terminal tm) :: (f prod_es' es)
        | (_,_) -> 
          if include_terminals then (pp_terminal_unquoted m xd tm,classify_TTC_terminal tm) :: (f prod_es' es)

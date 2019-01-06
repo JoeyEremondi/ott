@@ -594,7 +594,7 @@ let collapse m xd (funcs:int_funcs) : int_funcs_collapsed =
 let print m xd (sorting,refl) =
   match m with
   | Tex _ | Ascii _ -> Auxl.error None "internal: print of Tex-Ascii\n"
-  | Rdx _ -> ""
+  | Rdx ro ->  "; Rewrites" ^ String.concat " " (List.map (fun (x,y) -> x ^ y)  !(ro.ppr_rewrites))
     (* let print_block block =
      *     if ((List.length block) = 1) 
      *     then 
@@ -742,6 +742,7 @@ let compute m xd (funcs:int_funcs_collapsed) =
   print m xd (sort funcs)
 
 let compute_rdx_subrules m xd (funcs:int_funcs_collapsed) =
+  let (Rdx ro) = m in 
   let print_rdx_subrules (sorting, refl) =
     let print_block block =
 	if ((List.length block) = 1) 
@@ -754,6 +755,6 @@ let compute_rdx_subrules m xd (funcs:int_funcs_collapsed) =
                (List.map (fun (_,((h1,h2,h3),s,_)) -> h1 ^ h2 ^ h3 ^ s) block))
 	  ^ ")" in
       "; DEPENDENCIES" ^ string_of_int (List.length sorting) ^ "\n"^ String.concat "" (List.map print_block sorting)
-  in ""
+  in  ""
   (* print_rdx_subrules (sort funcs) *)
 
