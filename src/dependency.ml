@@ -594,7 +594,17 @@ let collapse m xd (funcs:int_funcs) : int_funcs_collapsed =
 let print m xd (sorting,refl) =
   match m with
   | Tex _ | Ascii _ -> Auxl.error None "internal: print of Tex-Ascii\n"
-  | Rdx ro ->  "; Rewrites" ^ String.concat " " (List.map (fun (x,y) -> x ^ y)  !(ro.ppr_rewrites))
+  | Rdx ro ->
+    let compound (x,y,z) =  "  [" ^ x ^ " (rw-lambda\n    [`" ^ String.trim y ^ "\n      => "  ^ String.trim z ^ "])]" in
+    let atomic (x,z) =  "  [" ^ x ^ " "  ^ String.trim z ^ "]" in
+    let header = "(define-rw-context ott-rewrites\n" in
+    let cheader = "  #:compound(\n " in
+    let aheader = "  #:atomic(\n " in
+    let footer = "\n)" in
+    let atomics = String.concat "\n" (List.map atomic !(ro.ppr_atomic_rewrites)) in
+    let compounds = String.concat "\n" (List.map compound !(ro.ppr_compound_rewrites)) in
+    ""
+    (* header ^ aheader ^ atomics ^ footer ^ cheader ^ compounds  ^ footer ^ footer *)
     (* let print_block block =
      *     if ((List.length block) = 1) 
      *     then 

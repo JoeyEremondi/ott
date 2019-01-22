@@ -509,18 +509,29 @@ let pp_defn fd (m:pp_mode) (xd:syntaxdefn) lookup (defnclass_wrapper:string) (un
 
   | Rdx _ ->
     (* Printf.fprintf fd "       ;;; defn %s\n" d.d_name; *)
-    (try
+    (match (List.assoc_opt "rdx-red" d.d_homs) with
+     
+    | _ ->
+    ((try
       let mode = List.assoc "rdx-mode" d.d_homs in
-      Printf.fprintf fd "\n  #:mode (%s %s)\n  #:contract %s\n\n"
+      Printf.fprintf fd "\n  #:mode (%s %s)\n"
         d.d_name
         (match mode with [Hom_string s] -> s
         (* TODO *)
                        | _ -> Auxl.error (Some d.d_loc) ("rdx backend: cannot print mode for declaration: "^d.d_name))
-        (Grammar_pp.pp_symterm m xd [] ([],[]) d.d_form) 
+         
+     with Not_found -> ());
+    Printf.fprintf fd "  #:contract %s\n\n" (Grammar_pp.pp_symterm m xd [] ([],[]) d.d_form);
+    (try
+      let mode = List.assoc "rdx-inv" d.d_homs in
+      Printf.fprintf fd "  #:inv %s\n\n"
+        (match mode with [Hom_string s] -> s
+        (* TODO *)
+                       | _ -> Auxl.error (Some d.d_loc) ("rdx backend: cannot print inv for declaration: "^d.d_name))
      with Not_found -> ());
     (match (List.assoc_opt "rdx-reduction" d.d_homs) with
     | _ ->
-      iter_sep (pp_processed_semiraw_rule fd m xd) "\n\n" d.d_rules)
+      iter_sep (pp_processed_semiraw_rule fd m xd) "\n\n" d.d_rules) ) )
 
   | Lem _ ->
       Printf.fprintf fd "(* defn %s *)\n\n" d.d_name;

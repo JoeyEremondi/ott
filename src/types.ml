@@ -851,9 +851,11 @@ and pp_caml_opts =
 and pp_rdx_opts = (* ro *)
     { ppr_default_language : string;
       ppr_metavars : string list ref;
-      ppr_rewrites : (string*string) list ref;
+      ppr_compound_rewrites : (string*string*string) list ref;
+      ppr_atomic_rewrites : (string * string) list ref;
       ppr_escape_nonterms: bool;
-      ppr_ascii: bool}
+      ppr_ascii: bool;
+    ppr_atomic: bool}
 
 type pp_lex_opts = unit (* lo *)
 type pp_menhir_opts = 
@@ -888,9 +890,11 @@ let pp_ascii_opts_default =
 let pp_rdx_opts_default =
   { ppr_default_language = "L";
     ppr_metavars = ref [];
-    ppr_rewrites = ref [];
+    ppr_compound_rewrites = ref [];
+    ppr_atomic_rewrites = ref [];
     ppr_ascii = false;
-    ppr_escape_nonterms = false}
+    ppr_escape_nonterms = false;
+  ppr_atomic = false}
     
 let ao_default =
   { ppa_colour = true;

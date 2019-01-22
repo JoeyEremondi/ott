@@ -919,7 +919,7 @@ and pp_terminal m xd tm =
   | Isa _ -> pp_isa_terminal m xd tm
   | Hol _ -> tm
   | Lem _ -> tm
-  | Rdx ro when ro.ppr_ascii -> "\"" ^ tm ^ "\""
+  | Rdx ro when ro.ppr_ascii -> "\"" ^ String.escaped tm ^ "\""
   | Rdx _ -> tm
   | Twf _ -> tm
   | Caml _ -> "_" (* tm *)
@@ -934,7 +934,7 @@ and pp_terminal_unquoted m xd tm =
   | Hol _ -> tm
   | Lem _ -> tm
   | Twf _ -> tm
-  | Rdx ro when ro.ppr_ascii -> "\"" ^ tm ^ "\""
+  | Rdx ro when ro.ppr_ascii -> "\"" ^ String.escaped tm ^ "\""
   | Caml _ -> "_" (* tm *)
   | Lex _ | Menhir _ -> tm
 
@@ -2294,6 +2294,8 @@ and pp_element m xd sie in_type e =
         | Lang_metavar (mvrp,mv) when (match m with |Rdx ro when ro.ppr_escape_nonterms -> true | _ -> false )  ->  
             let s = pp_metavar_with_sie m xd sie mv in 
             Some (check_conflict s s)
+        | Lang_nonterm (ntrp, nt) when (match m with | Rdx ro -> true | _ -> false ) ->
+          Some (check_conflict (pp_nonterm m xd nt) (pp_nonterm m xd nt))
         | Lang_nonterm (ntrp,nt) ->   
             let ntrp' = Auxl.promote_ntr xd ntrp in 
             Some (check_conflict (pp_nonterm m xd nt) (pp_nontermroot_ty m xd ntrp'))
@@ -2552,19 +2554,22 @@ and pp_prod m xd rnn rpw p = (* returns a string option *)
       if p.prod_meta then
         None
       else (
+        let es = apply_hom_order m xd p in
+        let ss = Auxl.option_map (pp_element m xd [] false) es in
+        let isAtomic = List.length ss == 0 in
         if (not (ro.ppr_ascii || ro.ppr_escape_nonterms )) then (
         let m_lhs = Rdx {ro with ppr_escape_nonterms = true} in 
-        let m_rhs = Rdx {ro with ppr_ascii = true} in
+        let m_rhs = Rdx {ro with ppr_ascii = true ; ppr_atomic = isAtomic} in
         let rewrite_lhs = pp_prod m_lhs xd rnn rpw p  in
         let rewrite_rhs = pp_prod m_rhs xd rnn rpw p in
-        match (rewrite_lhs, rewrite_rhs) with
-        | (Some lhs, Some rhs) -> ro.ppr_rewrites := (lhs, rhs) :: !(ro.ppr_rewrites)
+        
+        match (rewrite_lhs, rewrite_rhs, isAtomic) with
+        | (Some lhs, Some rhs, false) -> ro.ppr_compound_rewrites := ("'" ^ p.prod_name, lhs, rhs) :: !(ro.ppr_compound_rewrites)
+        | (Some lhs, Some rhs, true) -> ro.ppr_atomic_rewrites := ("'" ^ p.prod_name, rhs) :: !(ro.ppr_atomic_rewrites)
         | _ -> () )
       else ();
         (* pp_elements is not flexible enough, so invoke pp_element manually *)
-        let es = apply_hom_order m xd p in
-        let ss = Auxl.option_map (pp_element m xd [] false) es in
-        let pname = if ro.ppr_ascii then "list" else p.prod_name in
+        let pname = if ro.ppr_atomic then "identity" else if ro.ppr_ascii then "list" else p.prod_name in
         ( match List.length ss with
           | 0 -> Some ("    "^p.prod_name)
           | 1 -> ( match es with
