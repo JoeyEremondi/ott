@@ -2226,9 +2226,9 @@ and pp_plain_element e =
   | Lang_list elb ->  "(Lang_list "^String.concat " " (List.map pp_plain_element elb.elb_es)^")"
 
 and pp_element m xd sie in_type e =
-  let rdxAscii = match m with | Rdx ro when ro.ppr_ascii -> true | _ -> false in 
+  let rdxAscii = match m with | Rdx ro when ro.ppr_ascii -> true | Rdx ro -> false |  _ -> true in 
   match m with
-  | Ascii _ | Tex _ | Rdx _ when rdxAscii ->
+  | Rdx _ | Ascii _ | Tex _ when rdxAscii  ->
       ignore("pp element refactoring in progress");
 (* TODO: SHOULD WE USE pp_symterm TO DO THIS FOR Ascii AND Tex, TO AVOID REPETITION OF ALL THE FANCY DOTFORM CODE AND ENSURE CONSISTENCY?*)
 (*  This is now only called from the point marked FOOBAZ in pp_com_es and two points in defns.ml.  It should be replaced by the generation of appropriate symterms and then pp of them, to avoid duplication of listform code (which is supported for symterms but not yet here *)
@@ -2663,7 +2663,7 @@ and pp_prod m xd rnn rpw p = (* returns a string option *)
 and pp_internal_coq_buffer = ref "" (* FZ HACK *)
 
 and pp_rule m xd crfn r  = (* returns a string option *)
-  print_string ("PP RULE " ^ r.rule_ntr_name ^ "\n");
+  (* print_string ("PP RULE " ^ r.rule_ntr_name ^ "\n"); *)
   let pp_com = pp_com_strings m xd r.rule_homs [pp_nonterm_with_sie m xd [] (r.rule_ntr_name,[])] in
   let result : string option = 
   match m with 
