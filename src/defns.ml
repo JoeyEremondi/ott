@@ -351,6 +351,7 @@ let pp_drule fd (m:pp_mode) (xd:syntaxdefn) (dr:drule) : unit =
           output_string fd "\"\n"
 
       | Rdx ro ->
+        if not(List.exists (fun (h,_) -> String.compare h "coq" = 0) dr.drule_homs) then (
         let make_hline sl =
           let max = List.fold_left max 0 (List.map String.length sl) in
           String.make (max+2) '-' ^ " \"" ^ dr.drule_name ^ "\""
@@ -365,7 +366,7 @@ let pp_drule fd (m:pp_mode) (xd:syntaxdefn) (dr:drule) : unit =
           end;
           output_string fd ((make_hline [ppd_conclusion])^"\n  ");
           output_string fd ppd_conclusion;
-          output_string fd "]\n"
+          output_string fd "]\n")
 
       | Hol _ ->
           Printf.fprintf fd "( (* %s *) " dr.drule_name; 
