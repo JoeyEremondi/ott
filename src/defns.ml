@@ -82,7 +82,7 @@ let pp_subntr (m: pp_mode) (xd: syntaxdefn): (nontermroot * nontermroot * nonter
 	Auxl.pp_is ntrl ntru ^ " " 
 	^ Auxl.hide_isa_trailing_underscore m
 	    (( match m with Twf _ -> String.uppercase ntr' 
-	    | Coq _ | Isa _ | Hol _ | Lem _ | Rdx _ -> ntr'
+	    | Coq _ | Isa _ | Hol _ | Lem _ | Rdx _ | Tur _ -> ntr'
 	    | Caml _ | Tex _ | Ascii _ | Lex _ | Menhir _ -> raise Auxl.ThisCannotHappen )
 	     ^ Grammar_pp.pp_suffix_with_sie m xd Bounds.sie_project suff)
       in ( match m with
@@ -249,7 +249,7 @@ let pp_drule fd (m:pp_mode) (xd:syntaxdefn) (dr:drule) : unit =
         (Grammar_pp.pp_tex_DRULE_NAME_NAME m)
         (Auxl.pp_tex_escape dr.drule_name)
         pp_com
-  | Isa _ | Hol _ | Lem _ | Coq _ | Twf _ | Rdx _ ->
+  | Isa _ | Hol _ | Lem _ | Coq _ | Twf _ | Rdx _ | Tur _ ->
       let non_free_ntrs = Subrules_pp.non_free_ntrs m xd xd.xd_srs in
 
       (* find all the nonterms used at non-free types *)
@@ -354,6 +354,24 @@ let pp_drule fd (m:pp_mode) (xd:syntaxdefn) (dr:drule) : unit =
         let make_hline sl =
           let max = List.fold_left max 0 (List.map String.length sl) in
           String.make (max+2) '-' ^ " \"" ^ dr.drule_name ^ "\""
+        in
+        Printf.fprintf fd " [";
+        if (snd ppd_premises)<>[] || ppd_subntrs<>[] then begin
+          (* Printf.fprintf fd "("; *)
+          iter_asep fd "\n  " (output_string fd)          
+	    (ppd_subntrs @ snd ppd_premises);
+          (* Printf.fprintf fd ")\n  "; *)
+          Printf.fprintf fd "\n  ";
+          end;
+          output_string fd ((make_hline [ppd_conclusion])^"\n  ");
+          output_string fd ppd_conclusion;
+        output_string fd "]\n"
+
+      | Tur turo ->
+        Printf.fprintf fd "\n;;Turnstile drule\n";
+        let make_hline sl =
+          let max = List.fold_left max 0 (List.map String.length sl) in
+          String.make (max+2) '-'
         in
         Printf.fprintf fd " [";
         if (snd ppd_premises)<>[] || ppd_subntrs<>[] then begin
@@ -534,7 +552,7 @@ let pp_defn fd (m:pp_mode) (xd:syntaxdefn) lookup (defnclass_wrapper:string) (un
       iter_sep (pp_processed_semiraw_rule fd m xd) "\n\n" d.d_rules) ) )
 
   | Tur _ ->
-    Printf.fprintf fd "\n ;;; defn %s\n" d.d_name;
+    Printf.fprintf fd "%s\n" d.d_name;
     iter_sep (pp_processed_semiraw_rule fd m xd) "\n\n" d.d_rules
 
 
@@ -692,8 +710,8 @@ let pp_defnclass fd (m:pp_mode) (xd:syntaxdefn) lookup (dc:defnclass) =
     output_string fd ")\n"
 
   | Tur turo -> 
-    Printf.fprintf fd "\n(define-typed-syntax\n  %s" "";
-    iter_asep fd "\n)\n(define-typed-syntax \n "
+    Printf.fprintf fd "\n(define-typed-syntax " ;
+    iter_asep fd "\n)\n\n(define-typed-syntax "
       (fun d -> pp_defn fd m xd lookup dc.dc_wrapper universe d)
       dc.dc_defns;
       output_string fd ")\n"
