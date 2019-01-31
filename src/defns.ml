@@ -533,6 +533,11 @@ let pp_defn fd (m:pp_mode) (xd:syntaxdefn) lookup (defnclass_wrapper:string) (un
     | _ ->
       iter_sep (pp_processed_semiraw_rule fd m xd) "\n\n" d.d_rules) ) )
 
+  | Tur _ ->
+    Printf.fprintf fd "\n ;;; defn %s\n" d.d_name;
+    iter_sep (pp_processed_semiraw_rule fd m xd) "\n\n" d.d_rules
+
+
   | Lem _ ->
       Printf.fprintf fd "(* defn %s *)\n\n" d.d_name;
       iter_sep (pp_processed_semiraw_rule fd m xd) "and\n" d.d_rules
