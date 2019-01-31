@@ -228,8 +228,9 @@ let pp_drule fd (m:pp_mode) (xd:syntaxdefn) (dr:drule) : unit =
       output_string fd "\n";
       output_string fd ppd_conclusion;
       output_string fd "\n"
-  | Tex _ ->                                  
-      let pp_com = 
+  | Tex _ ->
+    if not (List.exists (fun (h,_) -> String.compare h "tex-omit" = 0) dr.drule_homs) then
+      (let pp_com = 
         (match Auxl.hom_spec_for_hom_name "com" dr.drule_homs
         with
         | None -> ""
@@ -248,7 +249,7 @@ let pp_drule fd (m:pp_mode) (xd:syntaxdefn) (dr:drule) : unit =
       Printf.fprintf fd "}{%%\n{%s{%s}}{%s}%%\n}}\n"
         (Grammar_pp.pp_tex_DRULE_NAME_NAME m)
         (Auxl.pp_tex_escape dr.drule_name)
-        pp_com
+        pp_com)
   | Isa _ | Hol _ | Lem _ | Coq _ | Twf _ | Rdx _ ->
       let non_free_ntrs = Subrules_pp.non_free_ntrs m xd xd.xd_srs in
 
@@ -351,7 +352,7 @@ let pp_drule fd (m:pp_mode) (xd:syntaxdefn) (dr:drule) : unit =
           output_string fd "\"\n"
 
       | Rdx ro ->
-        if not(List.exists (fun (h,_) -> String.compare h "coq" = 0) dr.drule_homs) then (
+        if not(List.exists (fun (h,_) -> String.compare h "rdx-omit" = 0) dr.drule_homs) then (
         let make_hline sl =
           let max = List.fold_left max 0 (List.map String.length sl) in
           String.make (max+2) '-' ^ " \"" ^ dr.drule_name ^ "\""

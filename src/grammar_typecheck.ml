@@ -416,7 +416,7 @@ let allowable_hom_data =
                      "disambiguate";"prec";"leftassoc";"rightassoc";"menhir";"quotient-remove";"menhir-prec"],
                     "production"));
     ( Hu_prod_tm , (["isa";                      "tex";"lex";  "com"; "prec";"leftassoc";"rightassoc"],"production of the terminals grammar"));
-    ( Hu_drule   , ([                                          "com"; "rdx-omit"],"definition rule"));
+    ( Hu_drule   , ([                                          "com"; "rdx-omit"; "tex-omit"],"definition rule"));
     ( Hu_defn    , ([                            "tex";        "com";"isasyn";"isaprec";"disambiguate";"lemwcf";"rdx-mode";"rdx-inv"],"definition"));
     ( Hu_defnclass, (["coq-universe"],"defns block"));
     ( Hu_fundefn , (["isa";"coq";"hol";"lem";(*"twf";*)"tex";        "com";"order";"isasyn";"isaprec";(*"icht";*)"icho";"ichlo";"ich";"ichl";"ic";"ch";"ih";"coq-struct"],"function definition"));
