@@ -684,6 +684,13 @@ let pp_defnclass fd (m:pp_mode) (xd:syntaxdefn) lookup (dc:defnclass) =
     iter_asep fd "\n)\n(define-judgment-form L \n "
       (fun d -> pp_defn fd m xd lookup dc.dc_wrapper universe d)
       dc.dc_defns;
+    output_string fd ")\n"
+
+  | Tur turo -> 
+    Printf.fprintf fd "\n(define-typed-syntax\n  %s" "";
+    iter_asep fd "\n)\n(define-typed-syntax \n "
+      (fun d -> pp_defn fd m xd lookup dc.dc_wrapper universe d)
+      dc.dc_defns;
       output_string fd ")\n"
 
   | Twf wo -> 
@@ -1011,7 +1018,7 @@ let pp_fun_or_reln_defnclass_list
       | Twf _ -> 
 	  output_string fd "%%% definitions %%%\n\n";
           List.iter (fun frdc -> pp_fun_or_reln_defnclass fd m xd lookup frdc) frdcs
-      | Rdx _ -> 
+      | Rdx _ | Tur _ -> 
 	  output_string fd "\n;;; definitions \n";
           List.iter (fun frdc -> pp_fun_or_reln_defnclass fd m xd lookup frdc) frdcs
       | Coq co ->

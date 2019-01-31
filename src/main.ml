@@ -319,7 +319,8 @@ let types_of_extensions =
       "ml", "ocaml";
       "mll", "lex"; 
       "mly", "menhir";
-      "rkt", "rdx"] 
+      "rkt", "rdx";
+      "tur", "tur"] 
 
 let extension_of_type t = List.assoc t (List.map (function (a,b)->(b,a)) types_of_extensions)
 
@@ -333,7 +334,7 @@ let file_type name =
   with
     _ -> None 
 
-let non_tex_output_types = ["coq"; "isa"; "hol"; "lem"; "twf"; "ocaml"; "rdx"]
+let non_tex_output_types = ["coq"; "isa"; "hol"; "lem"; "twf"; "ocaml"; "rdx"; "tur"]
 let output_types =  "tex" :: "lex" :: "menhir" :: non_tex_output_types
 let input_types = "ott" :: output_types
 
@@ -380,7 +381,7 @@ let targets_in ts =
 
 let targets_non_tex = targets_in non_tex_output_types
 let targets = targets_in output_types
-let targets_for_non_picky = targets_in [(*"lex";"ocaml";*)"hol";"lem";"isa";"twf";"coq";"tex";"rdx"]
+let targets_for_non_picky = targets_in [(*"lex";"ocaml";*)"hol";"lem";"isa";"twf";"coq";"tex";"rdx";"tur"]
 
 (* collect the source filenames *)
 let source_filenames = 
@@ -496,6 +497,8 @@ let reset_m_coq m =
       Auxl.errorm m "reset_m_coq"  
 
 let m_rdx = Rdx pp_rdx_opts_default
+
+let m_tur = Tur ()
   
 (* finally compute the set of modes used in this run of Ott -- used
    when non-picky about multiple parses *)
@@ -515,7 +518,8 @@ let m_rdx = Rdx pp_rdx_opts_default
              "twf",m_twf;
              "coq",m_coq;
              "tex",m_tex;
-             "rdx",m_rdx]) 
+             "rdx",m_rdx;
+             "tur",m_tur]) 
         targets_for_non_picky)
 
 (* process *)
@@ -759,7 +763,9 @@ let output_stage (sd,lookup,sd_unquotiented,sd_quotiented_unaux) =
       | "lem" ->
           System_pp.pp_systemdefn_core_io m_lem sd lookup fi !merge_fragments
       | "rdx" ->
-          System_pp.pp_systemdefn_core_io m_rdx sd lookup fi !merge_fragments
+        System_pp.pp_systemdefn_core_io m_rdx sd lookup fi !merge_fragments
+      | "tur" ->
+          System_pp.pp_systemdefn_core_io m_tur sd lookup fi !merge_fragments
       | "twf" -> 
           System_pp.pp_systemdefn_core_io m_twf sd lookup fi !merge_fragments
       | "ocaml" -> 

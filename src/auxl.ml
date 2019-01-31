@@ -617,6 +617,7 @@ let hom_name_for_pp_mode m
     | Caml _ -> "ocaml"
     | Lex _ -> "lex"
     | Menhir _ -> "menhir"
+    | Tur _ -> "tur"
 
 (* select dependencies *)
 
@@ -830,7 +831,7 @@ let big_line_comment m s =
   | Coq _ | Hol _ | Lem _ | Isa _ | Caml _ -> "(** "^s^" *)\n"
   | Twf _ -> "%%% "^s^" %%%\n\n"
   | Tex _ -> "% "^s^"\n"
-  | Rdx _ -> ";;;; "^s^" \n"
+  | Rdx _ | Tur _ -> ";;;; "^s^" \n"
   | Menhir _ | Lex _ | Ascii _ -> errorm m "big_line_comment"
 
 (* print only if not empty *)

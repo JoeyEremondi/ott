@@ -408,16 +408,16 @@ let allowable_hom_data =
                     "nonterminal, metavar or indexvar root"));
     ( Hu_metavar , (["isa";"coq";"hol";"lem";(*"twf";*)"tex";"ocaml";"com";"coq-equality";"lex";"texvar";"isavar";"holvar";"lemvar";"ocamlvar";"repr-locally-nameless";(*"repr-nominal";*)"phantom";"ocamllex";"ocamllex-remove"],
                     "metavar declaration"));
-    ( Hu_rule    , (["isa";"coq";"hol";"lem";(*"twf";*)"tex";"ocaml";"com";"coq-equality";"coq-universe";(*"icht";*)"icho";"ichlo";"ich";"ichl";"ic";"ch";"ih";"phantom";"aux";"auxparam";"menhir-start";"quotient-with";"pp";"pp-raw"; "rdx"],
+    ( Hu_rule    , (["isa";"coq";"hol";"lem";(*"twf";*)"tex";"ocaml";"com";"coq-equality";"coq-universe";(*"icht";*)"icho";"ichlo";"ich";"ichl";"ic";"ch";"ih";"phantom";"aux";"auxparam";"menhir-start";"quotient-with";"pp";"pp-raw"; "rdx"; "tur"],
                     "rule"));
     ( Hu_rule_meta, (["com"], "special rule"));
     ( Hu_prod    , (["isa";"coq";"hol";"lem";(*"twf";*)"tex";"texlong";"ocaml";"com";"order";"isasyn";"isaprec";(*"icht";*)"icho";"ichlo";"ich";"ichl";"ic";"ch";"ih";
-                     "rdx";"rdx-mode";"rdx-inv"; "rdx-red";
+                     "rdx";"rdx-mode";"rdx-inv"; "rdx-red"; "tur";"tur-elab";"tur-inputs";"tur-type";"tur-type-mode";
                      "disambiguate";"prec";"leftassoc";"rightassoc";"menhir";"quotient-remove";"menhir-prec"],
                     "production"));
     ( Hu_prod_tm , (["isa";                      "tex";"lex";  "com"; "prec";"leftassoc";"rightassoc"],"production of the terminals grammar"));
     ( Hu_drule   , ([                                          "com"],"definition rule"));
-    ( Hu_defn    , ([                            "tex";        "com";"isasyn";"isaprec";"disambiguate";"lemwcf";"rdx-mode";"rdx-inv"],"definition"));
+    ( Hu_defn    , ([                            "tex";        "com";"isasyn";"isaprec";"disambiguate";"lemwcf";"rdx-mode";"rdx-inv";"tur-elab";"tur-inputs";"tur-type";"tur-type-mode"],"definition"));
     ( Hu_defnclass, (["coq-universe"],"defns block"));
     ( Hu_fundefn , (["isa";"coq";"hol";"lem";(*"twf";*)"tex";        "com";"order";"isasyn";"isaprec";(*"icht";*)"icho";"ichlo";"ich";"ichl";"ic";"ch";"ih";"coq-struct"],"function definition"));
     ( Hu_fundefnclass, ([(* "isa-proof";*)"hol-proof"],"funs block"));
@@ -433,6 +433,7 @@ let embed_allowable_homs = ["coq";"coq-lib";"coq-preamble";
                             "hol";"hol-preamble";
                             "lem";"lem-preamble";
                             "rdx";
+                            "tur";
                             "tex";"tex-preamble";"tex-wrap-pre";"tex-wrap-post";
                             (*"twf";*)
                             "ocaml";"ocaml-preamble";

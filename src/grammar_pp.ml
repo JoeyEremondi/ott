@@ -921,6 +921,7 @@ and pp_terminal m xd tm =
   | Lem _ -> tm
   | Rdx ro when ro.ppr_ascii -> "\"" ^ String.escaped tm ^ "\""
   | Rdx _ -> tm
+  | Tur _ -> tm
   | Twf _ -> tm
   | Caml _ -> "_" (* tm *)
   | Lex _ | Menhir _ -> tm
@@ -935,6 +936,7 @@ and pp_terminal_unquoted m xd tm =
   | Lem _ -> tm
   | Twf _ -> tm
   | Rdx ro when ro.ppr_ascii -> "\"" ^ String.escaped tm ^ "\""
+  | Tur _ -> tm
   | Caml _ -> "_" (* tm *)
   | Lex _ | Menhir _ -> tm
 
@@ -1030,7 +1032,7 @@ and pp_nonterm_with_sie_internal as_type m xd sie (ntr,suff) =
             String.concat "" 
               (apply_hom_spec m xd hs 
                  [Auxl.pp_tex_escape ntr^(pp_suffix_with_sie m xd sie suff)]))
-    | Coq _ | Isa _ | Hol _ | Lem _ | Rdx _ | Twf _ | Caml _ | Lex _ | Menhir _ -> 
+    | Coq _ | Isa _ | Hol _ | Lem _ | Rdx _ | Tur _ | Twf _ | Caml _ | Lex _ | Menhir _ -> 
         let s0 = pp_ntr ^ (pp_suffix_with_sie m xd sie suff) in
         let s1 = 
           if as_type then s0
@@ -1080,7 +1082,7 @@ and pp_metavar_with_sie_internal as_type m xd sie (mvr,suff) =
               (apply_hom_spec m xd hs 
                  [Auxl.pp_tex_escape mvr^(pp_suffix_with_sie m xd sie suff)])) 
 
-    | Coq _ | Isa _ | Hol _ | Lem _ | Twf _ | Rdx _ | Caml _ | Lex _ | Menhir _ ->
+    | Coq _ | Isa _ | Hol _ | Lem _ | Twf _ | Rdx _ | Tur _ | Caml _ | Lex _ | Menhir _ ->
         let sescape = match m with | Rdx ro when ro.ppr_escape_nonterms -> "," | _ -> "" in
         let s = sescape ^ pp_mvr ^ (pp_suffix_with_sie m xd sie suff) in
         if as_type then s
@@ -1095,7 +1097,7 @@ and pp_nt_or_mv_with_sie_internal as_type m xd sie (ntmv,suff) =
 and pp_nt_or_mv_with_de_with_sie_internal as_type m xd sie (de :dotenv) ((ntmvr,suff0) as ntmv) =
   match m with
   | Ascii _ | Tex _ -> pp_nt_or_mv_with_sie_internal as_type m xd sie ntmv
-  | Isa _ | Coq _ | Hol _ | Lem _ | Twf _ | Caml _ | Rdx _ | Lex _ | Menhir _ -> 
+  | Isa _ | Coq _ | Hol _ | Lem _ | Twf _ | Caml _ | Rdx _ | Tur _ | Lex _ | Menhir _ -> 
       let (de1,de2) = de in
       match try Some(List.assoc ntmv de2) with Not_found -> None with
       | None -> pp_nt_or_mv_with_sie m xd sie ntmv
@@ -1281,7 +1283,7 @@ and pp_metavardefn m xd mvd =
 	    "Definition " ^  type_name ^ " := " 
 	    ^ (pp_metavarrep m xd mvd.mvd_rep type_name mvd.mvd_loc) ^ "." ^ pp_com ^ "\n" 
 	    ^ coq_maybe_decide_equality m xd mvd.mvd_rep (Mvr mvd.mvd_name) mvd.mvd_loc
-	| Rdx ro -> ""
+	| Rdx _ | Tur _ -> "" (* TODO need metavardef for Turnstile? *)
 	    (* let type_name = pp_metavarroot_ty m xd mvd.mvd_name in *)
 	    (* ";; grammar_pp, 1279: " ^  type_name ^ " := "  *)
 	    (* ^ pp_metavarrep m xd mvd.mvd_rep type_name ^ "." ^ pp_com ^ "\n" *)
@@ -1405,7 +1407,7 @@ and pp_com_es m xd homs es =
     | Isa _ -> " -- {* " ^ String.concat "" (apply_hom_spec m xd hs ss) ^ " *}"
     | Coq _ -> " (*r " ^ String.concat "" (apply_hom_spec m xd hs ss) ^ " *)" 
     | Hol _ | Lem _ | Caml _ | Lex _ ->  " (* " ^ String.concat "" (apply_hom_spec m xd hs ss) ^ " *)" 
-    | Rdx _ -> "  ;; " ^ String.concat "" (apply_hom_spec m xd hs ss) 
+    | Rdx _ | Tur _ -> "  ;; " ^ String.concat "" (apply_hom_spec m xd hs ss) 
     | Menhir _ -> "/* " ^ String.concat "" (apply_hom_spec m xd hs ss) ^ " */" 
     | Ascii _ | Twf _ -> ""
 
@@ -1421,7 +1423,7 @@ and pp_com_strings m xd homs ss =
     | Isa _ -> " -- {* " ^ String.concat "" (apply_hom_spec m xd hs ss) ^ " *}"
     | Coq _ -> " (*r " ^ String.concat "" (apply_hom_spec m xd hs ss) ^ " *)"
     | Hol _ | Lem _ | Caml _ | Lex _ ->  " (* " ^ String.concat "" (apply_hom_spec m xd hs ss) ^ " *)"
-    | Rdx _ ->  " ;; " ^ String.concat "" (apply_hom_spec m xd hs ss)
+    | Rdx _ | Tur _ ->  " ;; " ^ String.concat "" (apply_hom_spec m xd hs ss)
     | Menhir _ -> "/* " ^ String.concat "" (apply_hom_spec m xd hs ss) ^ " */" 
     | Ascii _ | Twf _ -> ""
 
@@ -1550,7 +1552,7 @@ and pp_suffix_with_sie m xd sie suff =
           "_{"
           ^ String.concat "\\," (List.map (pp_suffix_item_with_sie m xd sie true) suff_subscript)
           ^ "}")
-  | Rdx _ -> pp_rdx_suffix_items m xd sie suff
+  | Rdx _ | Tur _ -> pp_rdx_suffix_items m xd sie suff
   | (Coq _ | Isa _ | Hol _ | Lem _ | Twf _  | Caml _ | Lex _ | Menhir _) ->
       (String.concat "" (List.map (pp_suffix_item_with_sie m xd sie false) suff)) 
 
@@ -1577,7 +1579,7 @@ and pp_suffix_item_with_sie m xd sie nosubscript suffi =
             ( (*List.nth sie i*) try List.nth sie i with Failure _ -> Si_num "999")) 
       in
       if ao.ppa_ugly then "["^s^"]" else s
-  | (Coq _ | Isa _ | Hol _ | Lem _ | Rdx _ | Twf _ | Caml _ | Lex _ | Menhir _) -> 
+  | (Coq _ | Isa _ | Hol _ | Lem _ | Rdx _ | Tur _ | Twf _ | Caml _ | Lex _ | Menhir _) -> 
       ( match suffi with
       |	Si_num s -> s
       | Si_punct s -> s
@@ -2228,7 +2230,7 @@ and pp_plain_element e =
 and pp_element m xd sie in_type e =
   let rdxAscii = match m with | Rdx ro when ro.ppr_ascii -> true | Rdx ro -> false |  _ -> true in 
   match m with
-  | Rdx _ | Ascii _ | Tex _ when rdxAscii  ->
+  | Rdx _ | Tur _ | Ascii _ | Tex _ when rdxAscii  ->
       ignore("pp element refactoring in progress");
 (* TODO: SHOULD WE USE pp_symterm TO DO THIS FOR Ascii AND Tex, TO AVOID REPETITION OF ALL THE FANCY DOTFORM CODE AND ENSURE CONSISTENCY?*)
 (*  This is now only called from the point marked FOOBAZ in pp_com_es and two points in defns.ml.  It should be replaced by the generation of appropriate symterms and then pp of them, to avoid duplication of listform code (which is supported for symterms but not yet here *)
@@ -2281,7 +2283,7 @@ and pp_element m xd sie in_type e =
       | Lang_sugaroption _ 
       | Lang_list _ -> None)
 
-  | Coq _ | Isa _ | Hol _ | Rdx _ | Lem _ | Twf _ | Caml _ ->
+  | Coq _ | Isa _ | Hol _ | Rdx _ | Tur _ | Lem _ | Twf _ | Caml _ ->
       let check_conflict v t =
         if String.compare v t = 0 
         then Some "_", t
@@ -2370,7 +2372,7 @@ and pp_elements m xd sie es paren toplevel in_list in_type =
   match m with 
   | Ascii _ | Tex _ | Lex _ | Menhir _ ->
       Some (String.concat " " (Auxl.option_map (pp_element m xd sie in_type) es) )
-  | Coq _ | Caml _ | Rdx _ | Lem _ ->
+  | Coq _ | Caml _ | Rdx _ | Tur _ | Lem _ ->
       lemTODOmo m "10" (*really? *) (
       let ss = (Auxl.option_map (pp_element m xd sie in_type) es) in
       let separator = 
@@ -2581,6 +2583,25 @@ and pp_prod m xd rnn rpw p = (* returns a string option *)
               | _ -> Some ("    (" ^ pname ^ " " ^ String.concat " " ss ^ ")") )
           | _ -> Some ("    (" ^ pname ^ " " ^ String.concat " " ss ^ ")") ))
 
+ | Tur turo ->
+      if p.prod_meta then
+        None
+      else (
+        let es = apply_hom_order m xd p in
+        let ss = Auxl.option_map (pp_element m xd [] false) es in
+        let isAtomic = List.length ss == 0 in
+        (
+        (* pp_elements is not flexible enough, so invoke pp_element manually *)
+        let pname =  p.prod_name in
+        ( match List.length ss with
+          | 0 -> Some ("    "^p.prod_name)
+          | 1 -> ( match es with
+              | [ Lang_metavar (mvr,mvs) ] ->
+                let mvp = List.hd ss in
+                Some ("    " ^ mvp)
+              | _ -> Some ("    (" ^ pname ^ " " ^ String.concat " " ss ^ ")") )
+          | _ -> Some ("    (" ^ pname ^ " " ^ String.concat " " ss ^ ")") )))
+
   | Twf _ ->
       if p.prod_meta then
         None
@@ -2731,7 +2752,7 @@ and pp_rule m xd crfn r  = (* returns a string option *)
   | Rdx ro ->
     let names = String.concat " " (List.map fst r.rule_ntr_names) in
     let bndrs = List.concat (List.map ( fun x -> x.prod_bs) r.rule_ps ) in
-    print_string ("PP RULE " ^ r.rule_ntr_name ^ " is meta or phantom " ^ ( if r.rule_meta || r.rule_phantom then "true" else "false") ^ "\n");
+    (* print_string ("PP RULE " ^ r.rule_ntr_name ^ " is meta or phantom " ^ ( if r.rule_meta || r.rule_phantom then "true" else "false") ^ "\n"); *)
       (* if (r.rule_meta || r.rule_phantom) && (match m with | Rdx _ -> false | _ -> true) 
        * then None
        * else *)
@@ -2770,7 +2791,44 @@ and pp_rule m xd crfn r  = (* returns a string option *)
              ^String.concat " " names (* ^ " "^pp_com *) ^" ::= \n" 
              ^ String.concat "\n" prods 
              ^")") )
- 
+
+  | Tur turo -> let names = String.concat " " (List.map fst r.rule_ntr_names) in
+    let bndrs = List.concat (List.map ( fun x -> x.prod_bs) r.rule_ps ) in
+    (* print_string ("PP RULE " ^ r.rule_ntr_name ^ " is meta or phantom " ^ ( if r.rule_meta || r.rule_phantom then "true" else "false") ^ "\n"); *)
+      (* if (r.rule_meta || r.rule_phantom) && (match m with | Rdx _ -> false | _ -> true) 
+       * then None
+       * else *)
+    ( let names = List.map (pp_nontermroot_ty m xd ) ( List.map fst r.rule_ntr_names) in 
+      let prodMod = if (r.rule_meta || r.rule_phantom)
+        then (fun p -> match List.assoc_opt p.prod_name (snd (List.assoc r.rule_ntr_name xd.xd_srd.srd_subrule_pn_promotion)) with
+            | None -> p
+            | Some pn -> { p with  prod_name = pn })
+        else (fun x -> x ) in
+      match List.assoc_opt r.rule_ntr_name (xd.xd_crd) with
+      | Some cr ->
+        let Some (cr_prodfn :  nonterm -> nontermroot -> rule -> prod -> string * string * string) = crfn in
+        let target = cr.cr_target in
+        let prodString (_,_,p) = p in
+         let hole = (cr.cr_hole, []) in
+        let prods = List.map
+	    (fun p -> (prodString (cr_prodfn hole target r (prodMod p))))
+     r.rule_ps in
+            Some 
+            (" ;Printing rule\n   ("
+             ^String.concat " " names (* ^ " "^pp_com *) ^" ::= \n    " 
+             ^ String.concat "\n    " prods 
+             ^")")
+         | None ->
+           let prods =
+          Auxl.option_map 
+	    (fun p -> pp_prod m xd r.rule_ntr_name r.rule_pn_wrapper (prodMod p))
+            r.rule_ps in
+          Some 
+            ("  ("
+             ^String.concat " " names (* ^ " "^pp_com *) ^" ::= \n" 
+             ^ String.concat "\n" prods 
+             ^")") )
+
       
   | Twf wo -> 
       if r.rule_meta || r.rule_phantom 
@@ -2938,7 +2996,9 @@ and pp_rule_list m xd crfn rs =
   | Twf wo ->
       int_rule_list_dep m xd rs (fun rs -> "") "\n" ""
   | Rdx ro ->
-      int_rule_list_dep m xd rs (fun rs -> "") "\n  ;grammar_pp, 2817: and " ""
+    int_rule_list_dep m xd rs (fun rs -> "") "\n  ;grammar_pp, 2817: and " ""
+  | Tur ro ->
+      int_rule_list_dep m xd rs (fun rs -> "") "\n  " ""
   | Caml oo ->
       int_rule_list_dep m xd rs (fun rs -> "\ntype \n") "\nand " ""
   | Lem lo ->
@@ -3133,7 +3193,7 @@ and pp_variable m xd mvrp var =
           (Auxl.mvd_of_mvr xd mvrp).mvd_rep with
       | None -> var
       | Some hs -> String.concat "" (apply_hom_spec m xd hs [var]))
-  | Rdx _ | Coq _ | Twf _ -> var  (* placeholder - ultimately may want some De Bruijning here *)        
+  | Rdx _ | Tur _ | Coq _ | Twf _ -> var  (* placeholder - ultimately may want some De Bruijning here *)        
   | Caml _ -> 
   (* placeholder - ultimately may want some De Bruijning here *)        
       (match Auxl.hom_spec_for_hom_name 
@@ -3292,7 +3352,7 @@ and pp_symterm_node_body m xd sie de stnb : string =
         match m with
         | Rdx ro when ro.ppr_ascii -> true
         | Ascii _ | Tex _ | Lex _ | Menhir _ -> true
-        | Coq _ | Isa _ | Hol _ | Lem _ | Rdx _ | Twf _  -> false
+        | Coq _ | Isa _ | Hol _ | Lem _ | Rdx _ | Tur _ | Twf _  -> false
         | Caml oo -> oo.ppo_include_terminals in
       let pp_es' () = pp_symterm_elements' m xd sie de include_terminals prod_es stnb.st_es in
       let pp_es () = pp_symterm_elements m xd sie de include_terminals prod_es stnb.st_es in
@@ -3304,7 +3364,7 @@ and pp_symterm_node_body m xd sie de stnb : string =
           ( match stnb.st_prod_name with
           | "formula_dots" -> String.concat " \\quad " (pp_es())
           | _ -> pp_tex_insert_spacing (pp_es'()))
-      | Isa _ | Hol _ | Lem _ | Coq _ | Twf _ | Rdx _ | Caml _ ->
+      | Isa _ | Hol _ | Lem _ | Coq _ | Twf _ | Rdx _ | Tur _ | Caml _ ->
           ( match stnb.st_prod_name with
 
           (* special case pp for proof assistant judgement forms *)
@@ -3324,6 +3384,8 @@ and pp_symterm_node_body m xd sie de stnb : string =
                       | Coq co -> 
                           pp_symterm_element_judge_coq_plain m xd sie de p'' stnb''
                       | Rdx ro -> 
+                        "("^(pp_symterm_element_judge_coq_plain m xd sie de p'' stnb'')^")"
+                      | Tur ro -> 
                           "("^(pp_symterm_element_judge_coq_plain m xd sie de p'' stnb'')^")"
                       | Twf wo -> 
                           pp_symterm_element_judge_twf_plain m xd sie de p'' stnb''
@@ -3632,6 +3694,15 @@ and pp_symterm_node_body m xd sie de stnb : string =
                       ^ ")"  )
               | Rdx _ -> 
 	          ( match stnb.st_es with
+	            | [] -> promoted_pn
+                    | [es] -> "("^promoted_pn^" "^(List.hd (pp_es()))^")"
+	            | _  ->
+		      "("
+                      ^ promoted_pn^" "
+                      ^ String.concat  " " (pp_es())
+                      ^ ")"  )
+              | Tur _ -> 
+	        ( match stnb.st_es with
 	            | [] -> promoted_pn
                     | [es] -> "("^promoted_pn^" "^(List.hd (pp_es()))^")"
 	            | _  ->

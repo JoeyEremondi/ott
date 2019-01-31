@@ -587,6 +587,7 @@ let collapse m xd (funcs:int_funcs) : int_funcs_collapsed =
   | Twf _ -> twf_collapse m xd funcs
   | Caml _ -> caml_collapse m xd funcs
   | Rdx _ -> rdx_collapse m xd funcs
+  | Tur _ -> rdx_collapse m xd funcs
   | Tex _ | Ascii _ -> Auxl.error None "internal: collapse of Tex-Ascii\n"
 
 (* *** the printer *)
@@ -594,15 +595,16 @@ let collapse m xd (funcs:int_funcs) : int_funcs_collapsed =
 let print m xd (sorting,refl) =
   match m with
   | Tex _ | Ascii _ -> Auxl.error None "internal: print of Tex-Ascii\n"
+  | Tur turo -> ";TODO print Turnstile dependencies\n"
   | Rdx ro ->
-    let compound (x,y,z) =  "  [" ^ x ^ " (rw-lambda\n    [`" ^ String.trim y ^ "\n      => "  ^ String.trim z ^ "])]" in
-    let atomic (x,z) =  "  [" ^ x ^ " "  ^ String.trim z ^ "]" in
-    let header = "(define-rw-context ott-rewrites\n" in
-    let cheader = "  #:compound(\n " in
-    let aheader = "  #:atomic(\n " in
-    let footer = "\n)" in
-    let atomics = String.concat "\n" (List.map atomic !(ro.ppr_atomic_rewrites)) in
-    let compounds = String.concat "\n" (List.map compound !(ro.ppr_compound_rewrites)) in
+    (* let compound (x,y,z) =  "  [" ^ x ^ " (rw-lambda\n    [`" ^ String.trim y ^ "\n      => "  ^ String.trim z ^ "])]" in
+     * let atomic (x,z) =  "  [" ^ x ^ " "  ^ String.trim z ^ "]" in
+     * let header = "(define-rw-context ott-rewrites\n" in
+     * let cheader = "  #:compound(\n " in
+     * let aheader = "  #:atomic(\n " in
+     * let footer = "\n)" in
+     * let atomics = String.concat "\n" (List.map atomic !(ro.ppr_atomic_rewrites)) in
+     * let compounds = String.concat "\n" (List.map compound !(ro.ppr_compound_rewrites)) in *)
     ""
     (* header ^ aheader ^ atomics ^ footer ^ cheader ^ compounds  ^ footer ^ footer *)
     (* let print_block block =

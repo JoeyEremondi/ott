@@ -879,6 +879,7 @@ type pp_mode =  (* m *)
   | Caml of pp_caml_opts
   | Lex  of pp_menhir_opts (* NB: same as pp_menhir_opts *)
   | Menhir of pp_menhir_opts
+  | Tur of unit
       
 let pp_ascii_opts_default =
   Ascii { ppa_colour = true;

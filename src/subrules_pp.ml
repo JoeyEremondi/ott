@@ -428,7 +428,7 @@ let pp_subrules m xd srs : int_funcs_collapsed =
 		     if conjuncts = [] 
        then Auxl.pp_true m false
        else String.concat (Auxl.pp_and m false) conjuncts
-                   | Rdx _ -> ""
+                   | Rdx _ | Tur _ -> ""
                      (* if conjuncts = [] then "" else String.concat (Auxl.pp_and m false) conjuncts *)
 		       | Twf _ -> String.concat "" (List.map (function s -> " <- "^s) conjuncts)
                    | Lex _ | Menhir _ | Tex _ | Ascii _ -> Auxl.errorm m "pp_subrule"
@@ -436,13 +436,13 @@ let pp_subrules m xd srs : int_funcs_collapsed =
                  pls in
 
              match m with
-             | Rdx _ ->
+             | Rdx _ | Tur _ ->
                if rhss = [] then [] else
                let rhs = 
                    if List.length rhss = 1 then (List.hd rhss)
-            else
-              String.concat "\n" ( rhss)
-                 in
+                   else
+                     String.concat "\n" ( rhss)
+               in
 	         
 	         [("", lhs, rhs)]
              | Coq _ | Hol _ | Lem _ | Isa _ | Caml _  ->  
@@ -503,6 +503,7 @@ let pp_subrules m xd srs : int_funcs_collapsed =
        ^ " -> type.\n", "","")
         | Rdx _ ->
           ( "\n#:mode (" ^ id ^ " I )\n", "", "")
+        | Tur _ -> ("; TODO turnstile subrules header\n", "", "")
         | Tex _ | Ascii _ | Lex _ | Menhir _ -> Auxl.error (Some (Auxl.loc_of_ntr xd srl)) "pp_subprod"
          ) in
 
