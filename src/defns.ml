@@ -229,7 +229,10 @@ let pp_drule fd (m:pp_mode) (xd:syntaxdefn) (dr:drule) : unit =
       output_string fd ppd_conclusion;
       output_string fd "\n"
   | Tex _ ->
-    if not (List.exists (fun (h,_) -> String.compare h "tex-omit" = 0) dr.drule_homs) then
+    if (List.exists (fun (h,_) -> String.compare h "tex-omit" = 0) dr.drule_homs) then
+      (Printf.fprintf fd "\\newcommand{%s}[1]{%s[#1]{}\n"(Grammar_pp.tex_drule_name m dr.drule_name)
+        (Grammar_pp.pp_tex_DRULE_NAME m))
+      else 
       (let pp_com = 
         (match Auxl.hom_spec_for_hom_name "com" dr.drule_homs
         with
